@@ -1,6 +1,7 @@
 package com.ai.baas.bmc.topoligy.core.bolt;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +17,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
 import com.ai.baas.bmc.topoligy.core.util.BmcConstants;
+import com.ai.baas.storm.jdbc.JdbcProxy;
 
 public class UnpackingBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = -8200039989835637219L;
@@ -24,6 +26,9 @@ public class UnpackingBolt extends BaseBasicBolt {
 	@Override
 	public void prepare(Map stormConf, TopologyContext context) {
 		System.out.println("===============UnpackingBolt====");
+		JdbcProxy.loadResource(Arrays.asList("jdbc.bmc"), stormConf);
+		
+		
 	}
 	
 	@Override
