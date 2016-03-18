@@ -1,4 +1,4 @@
-package com.ai.baas.bmc.topoligy.core.util;
+package com.ai.baas.bmc.topology.core.util;
 
 public class BmcConstants {
 

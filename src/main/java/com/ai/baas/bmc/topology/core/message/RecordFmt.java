@@ -1,8 +1,8 @@
-package com.ai.baas.bmc.topoligy.core.message;
+package com.ai.baas.bmc.topology.core.message;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.ai.baas.bmc.topoligy.core.util.BmcConstants;
+import com.ai.baas.bmc.topology.core.util.BmcConstants;
 
 public class RecordFmt {
 	private RecordFmtKey recordFmtKey;

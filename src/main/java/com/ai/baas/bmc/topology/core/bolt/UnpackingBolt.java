@@ -1,4 +1,4 @@
-package com.ai.baas.bmc.topoligy.core.bolt;
+package com.ai.baas.bmc.topology.core.bolt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,7 +16,7 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
-import com.ai.baas.bmc.topoligy.core.util.BmcConstants;
+import com.ai.baas.bmc.topology.core.util.BmcConstants;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 
 public class UnpackingBolt extends BaseBasicBolt {

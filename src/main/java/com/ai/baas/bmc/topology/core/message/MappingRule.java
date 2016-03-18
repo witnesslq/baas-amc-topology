@@ -1,4 +1,4 @@
-package com.ai.baas.bmc.topoligy.core.message;
+package com.ai.baas.bmc.topology.core.message;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,7 +13,7 @@ import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ai.baas.bmc.topoligy.core.message.RecordFmt.RecordFmtKey;
+import com.ai.baas.bmc.topology.core.message.RecordFmt.RecordFmtKey;
 import com.ai.baas.storm.jdbc.JdbcTemplate;
 
 

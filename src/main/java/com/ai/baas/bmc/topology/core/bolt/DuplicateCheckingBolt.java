@@ -1,4 +1,4 @@
-package com.ai.baas.bmc.topoligy.core.bolt;
+package com.ai.baas.bmc.topology.core.bolt;
 
 import java.util.ArrayList;
 import java.util.Map;
