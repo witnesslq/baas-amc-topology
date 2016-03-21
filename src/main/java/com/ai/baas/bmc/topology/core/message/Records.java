@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ai.baas.bmc.topology.core.util.BmcConstants;
+import com.ai.baas.bmc.topology.core.util.AmcConstants;
 
 public class Records {
 	private static Logger logger = LoggerFactory.getLogger(Records.class);
@@ -21,10 +21,10 @@ public class Records {
 		this.original = original;
 		this.indexes = indexes;
 		//System.out.println("index="+indexes);
-		String[] recordArr = original.split(BmcConstants.RECORD_SPLIT, -1);
+		String[] recordArr = original.split(AmcConstants.RECORD_SPLIT, -1);
 		List<String[]> dataList = new ArrayList<String[]>();
 		for (int i = 0; i < recordArr.length; i++) {
-			dataList.add(recordArr[i].split(BmcConstants.FIELD_SPLIT, -1));
+			dataList.add(recordArr[i].split(AmcConstants.FIELD_SPLIT, -1));
 			data.add(new HashMap<String, String>());
 		}
 		for (Entry<String, Integer> entry : indexes.entrySet()) {
