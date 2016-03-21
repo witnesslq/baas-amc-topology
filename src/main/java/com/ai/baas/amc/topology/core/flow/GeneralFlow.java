@@ -8,9 +8,9 @@ import com.ai.baas.storm.flow.BaseFlow;
 import com.ai.baas.storm.util.BaseConstants;
 
 /**
- * GPRS通用拓扑图
- * @author majun
- * @since 2016.3.16
+ * 通用拓扑图
+ * @author LiangMeng
+ *
  */
 public class GeneralFlow extends BaseFlow {
 	private static Logger logger = LoggerFactory.getLogger(GeneralFlow.class);
