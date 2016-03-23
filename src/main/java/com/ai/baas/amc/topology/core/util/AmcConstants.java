@@ -1,6 +1,6 @@
 package com.ai.baas.amc.topology.core.util;
 
-public class BmcConstants {
+public class AmcConstants {
 
 	public static final String FIELD_SPLIT = new String(new char[] { (char) 1 });
 	public static final String RECORD_SPLIT = new String(new char[] { (char) 2 });

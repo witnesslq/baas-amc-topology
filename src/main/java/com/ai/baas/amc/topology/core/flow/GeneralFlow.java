@@ -9,17 +9,20 @@ import com.ai.baas.storm.util.BaseConstants;
 
 /**
  * 通用拓扑图
+ * Date: 2016年3月23日 <br>
+ * Copyright (c) 2016 asiainfo.com <br>
+ * 
  * @author LiangMeng
- *
  */
 public class GeneralFlow extends BaseFlow {
-	private static Logger logger = LoggerFactory.getLogger(GeneralFlow.class);
+	private static Logger LOG = LoggerFactory.getLogger(GeneralFlow.class);
 	
 	@Override
 	public void define() {
+	    LOG.info("GeneralFlow.define()");
 		super.setKafkaSpout();
 //		builder.setBolt("unpacking", new UnpackingBolt(), 1).shuffleGrouping(BaseConstants.KAFKA_SPOUT_NAME);
-		builder.setBolt("duplicate-checking", new DuplicateCheckingBolt(), 1).shuffleGrouping("unpacking");
+		builder.setBolt("duplicate-checking", new DuplicateCheckingBolt("f1"), 1).shuffleGrouping(BaseConstants.KAFKA_SPOUT_NAME);
 	}
 
 	public static void main(String[] args) {
