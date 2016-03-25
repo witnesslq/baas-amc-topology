@@ -24,26 +24,29 @@ public class DuplicateCheckingBolt extends BaseBasicBolt {
 	private static final long serialVersionUID = -4549737615575118377L;
 
     private static Logger LOG = LoggerFactory.getLogger(DuplicateCheckingBolt.class);
-    private String[] outputFields;
+    private String[] outputFields=new String[]{"data"};
     
-    public DuplicateCheckingBolt(String aOutputFields){
-        LOG.info("初始化输出格式");
-        outputFields = StringUtils.splitPreserveAllTokens(aOutputFields, ",");
-    }
+    
 	@Override
 	public void prepare(Map stormConf, TopologyContext context) {
-	    LOG.info("DuplicateCheckingBolt.prepare()");
+	    LOG.info("查重bolt[prepare方法]...");
 	}
 	
 	@Override
 	public void execute(Tuple input, BasicOutputCollector collector) {
-		LOG.info("DuplicateCheckingBolt.execute()");
-		List<Object> list = new  ArrayList<Object>();
-		list.add("test2");
-		list.add("test22");
-		list.add("test23");
-		list.add("test24");
-		collector.emit(list);
+	    LOG.info("查重bolt[execute方法]...");
+	    /*1.接收输入报文*/
+	    String inputData = input.getString(0);
+	    LOG.info("查重bolt输入消息报文：["+inputData+"]...");
+	    /*2.解析报文*/
+	    
+	    /*3.查重*/
+	        /*3.1 如果重复，则进错单*/ 
+	        /*3.2 如果不重复，则进备份*/
+	    /*5.将报文输出到下一环节*/
+        List<Object> datas = new ArrayList<Object>();
+	    datas.add(inputData);
+	    collector.emit(datas);
 	}
 
 	@Override
