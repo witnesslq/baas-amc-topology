@@ -1,6 +1,5 @@
 package com.ai.baas.amc.topology.core.bolt;
 import java.sql.Connection;
-import java.util.Arrays;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -12,9 +11,6 @@ import backtype.storm.topology.OutputFieldsDeclarer;
 import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
-
-import com.ai.baas.storm.jdbc.JdbcProxy;
-import com.ai.baas.storm.util.BaseConstants;
 /**
  * 账务优惠bolt
  * Date: 2016年3月23日 <br>

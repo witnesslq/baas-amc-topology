@@ -4,33 +4,41 @@ public class AmcConstants {
 	
     /**输入数据格式编码*/
     /*租户ID*/
-	public static final String TENANT_ID = "tenant_id";
+	public static final String TENANT_ID = "TENANT_ID";
     /*业务类型*/
-    public static final String SERVICE_ID = "service_id";
-    /*客户ID*/
-    public static final String CUST_ID = "cust_id";
-    /*账户ID*/
-    public static final String ACCT_ID = "acct_id";
-    /*用户ID*/
-    public static final String SUBS_ID = "subs_id";
+    public static final String SERVICE_ID = "SERVICE_ID";
+    /*来源*/
+    public static final String SOURCE = "SOURCE";
     /*批次号*/
-	public static final String BATCH_SERIAL_NUMBER = "bsn";
+    public static final String BSN = "BSN";
     /*唯一标识*/
-	public static final String SERIAL_NUMBER = "sn";
+    public static final String SN = "SN";
+    /*客户ID*/
+    public static final String CUST_ID = "CUST_ID";
+    /*用户ID*/
+    public static final String SUBS_ID = "SUBS_ID";
+    /*账户ID*/
+    public static final String ACCT_ID = "ACCT_ID";
     /*开始时间*/
-    public static final String ARRIVAL_TIME = "arrival_time";
-    /*账期*/
-    public static final String BILL_MONTH = "bill_month";
-    /*费用列表*/
-	public static final String FEE_LIST = "fee_list";
-    /*详单科目*/
-    public static final String DR_SUBJECT = "dr_subject";
+    public static final String START_TIME = "START_TIME";
+    /**/
+    public static final String TRADE_SEQ = "TRADE_SEQ";
     /*费用*/
-    public static final String FEE = "fee";
+	public static final String FEE1 = "FEE1";
+    /*详单科目*/
+    public static final String SUBJECT1 = "SUBJECT1";
+    /*费用*/
+    public static final String FEE2 = "FEE2";
+    /*详单科目*/
+    public static final String SUBJECT2 = "SUBJECT2";
+    /*费用*/
+    public static final String FEE3 = "FEE3";
+    /*详单科目*/
+    public static final String SUBJECT3 = "SUBJECT3";
 	
-	
+	/*查重bolt*/
 	public static final String DUPLICATE_CHECKING_BOLT = "duplicate_checking";
-
+	/*账务优惠bolt*/
     public static final String ACCOUNT_PREFERENTIAL_BOLT = "account_preferential";
 
 	
