@@ -5,7 +5,10 @@ apply plugin: 'maven-publish'
 sourceCompatibility = 1.7
 
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
-
+ext {
+    optBaseVersion = "1.0-SNAPSHOT"
+    baasVersion = "1.0.5-SNAPSHOT"
+}
 
 repositories {
     maven{ url "http://10.1.228.199:18081/nexus/content/groups/public/"  }
@@ -26,9 +29,14 @@ dependencies{
     compile 'org.apache.storm:storm-kafka:0.9.6'
     compile 'org.apache.hbase:hbase-client:1.1.2'
     compile 'commons-dbutils:commons-dbutils:1.5'
-    
+    //内部依赖
+    //compile 'com.ai.baas.storm:baas-storm:0.1.2-SNAPSHOT'
+    compile "com.ai.opt:opt-base:${optBaseVersion}"
+    compile 'com.ai.opt.sdk:opt-sdk:1.0-SNAPSHOT'
+    compile "com.ai.baas:baas-dshm-sdk:${baasVersion}"
     // 不打包依赖
     provided 'org.apache.storm:storm-core:0.9.6'
+    
 }
 
 sourceSets {
