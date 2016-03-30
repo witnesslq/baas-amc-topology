@@ -1,8 +1,6 @@
 package com.ai.baas.amc.topology.core.bolt;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -17,10 +15,9 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
-import com.ai.baas.amc.topology.core.util.AmcConstants;
+import com.ai.baas.amc.topology.core.util.AmcUtil;
 import com.ai.baas.storm.duplicate.DuplicateCheckingFromHBase;
 import com.ai.baas.storm.failbill.FailBillHandler;
-import com.ai.baas.storm.failbill.FailureBill;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.message.MappingRule;
 import com.ai.baas.storm.util.BaseConstants;
@@ -74,7 +71,7 @@ public class DuplicateCheckingBolt extends BaseBasicBolt {
                 collector.emit(datas);
     	    }else{
     	        /*6.进重单表*/
-    	        FailBillHandler.addFailBillMsg(this.initFailureBill(inputData,data));
+    	        FailBillHandler.addFailBillMsg(AmcUtil.initFailureBill(inputData,data));
     	    }
 	    }catch(Exception e){
 	        LOG.error("查重bolt[execute方法]..."+e.getMessage(),e);
@@ -86,21 +83,6 @@ public class DuplicateCheckingBolt extends BaseBasicBolt {
 	    declarer.declare(new Fields(outputFields));
 	}
 	
-	private FailureBill initFailureBill(String inputData,Map<String,String> data){
-	    FailureBill failureBill = new FailureBill();
-	    failureBill.setTenantId(data.get(AmcConstants.TENANT_ID));
-        failureBill.setServiceId(data.get(AmcConstants.SERVICE_ID));
-        failureBill.setSource(data.get(AmcConstants.SOURCE));
-	    failureBill.setBsn(data.get(AmcConstants.BSN));
-	    failureBill.setSn(data.get(AmcConstants.SN));
-	    //failureBill.setAccountPeriod(data.get(AmcConstants.TENANT_ID));
-        failureBill.setArrivalTime(data.get(AmcConstants.START_TIME));
-        failureBill.setFailStep(data.get(AmcConstants.FAIL_STEP_DUP));
-        failureBill.setFailCode(data.get(AmcConstants.FAIL_CODE_DUP));
-        failureBill.setFailReason("重复数据");
-        failureBill.setFailPakcet(inputData);
-        failureBill.setFailDate(new SimpleDateFormat("yyyyMMddhhmmss").format(new Date()));
-	    return failureBill;
-	}
+	
 
 }

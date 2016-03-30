@@ -3,6 +3,8 @@ package com.ai.baas.amc.topology.core.flow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import backtype.storm.tuple.Fields;
+
 import com.ai.baas.amc.topology.core.bolt.AccountPreferentialBolt;
 import com.ai.baas.amc.topology.core.bolt.DuplicateCheckingBolt;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
@@ -24,9 +26,9 @@ public class AccountPreferentialFlow extends BaseFlow {
 	    /*1.kafkaspout共用*/
 		super.setKafkaSpout();
 		/*2.设置查重bolt*/
-		builder.setBolt(AmcConstants.DUPLICATE_CHECKING_BOLT, new DuplicateCheckingBolt(), 1).shuffleGrouping(BaseConstants.KAFKA_SPOUT_NAME);
+		builder.setBolt(AmcConstants.BoltName.DUPLICATE_CHECKING_BOLT, new DuplicateCheckingBolt(), 1).shuffleGrouping(BaseConstants.KAFKA_SPOUT_NAME);
 		/*3.设置账务优惠bolt*/
-		builder.setBolt(AmcConstants.ACCOUNT_PREFERENTIAL_BOLT, new AccountPreferentialBolt(), 1).shuffleGrouping(AmcConstants.DUPLICATE_CHECKING_BOLT);
+		builder.setBolt(AmcConstants.BoltName.ACCOUNT_PREFERENTIAL_BOLT, new AccountPreferentialBolt(), 1).fieldsGrouping(AmcConstants.BoltName.DUPLICATE_CHECKING_BOLT, new Fields(AmcConstants.FmtFeildName.ACCT_ID));
         
 	}
 

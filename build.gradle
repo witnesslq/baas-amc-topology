@@ -7,7 +7,9 @@ sourceCompatibility = 1.7
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 ext {
     optBaseVersion = "1.0-SNAPSHOT"
-    baasVersion = "1.0.5-SNAPSHOT"
+    optSDKVersion = "1.0.2-SNAPSHOT"
+    baasDshmVersion = "1.0.6-SNAPSHOT"
+    
 }
 
 repositories {
@@ -32,7 +34,7 @@ dependencies{
     //内部依赖
     //compile 'com.ai.baas.storm:baas-storm:0.1.2-SNAPSHOT'
     compile "com.ai.opt:opt-base:${optBaseVersion}"
-    compile 'com.ai.opt.sdk:opt-sdk:1.0-SNAPSHOT'
+    compile 'com.ai.opt.sdk:opt-sdk:${optSDKVersion}'
     compile "com.ai.baas:baas-dshm-sdk:${baasVersion}"
     // 不打包依赖
     provided 'org.apache.storm:storm-core:0.9.6'

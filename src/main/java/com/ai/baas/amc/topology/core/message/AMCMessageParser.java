@@ -32,8 +32,8 @@ public class AMCMessageParser {
 	private static String[] headerKeys;
 	
 	static{
-		headerKeys = new String[] { AmcConstants.TENANT_ID,
-				AmcConstants.SERVICE_ID, AmcConstants.SOURCE};
+		headerKeys = new String[] { AmcConstants.FmtFeildName.TENANT_ID,
+				AmcConstants.FmtFeildName.SERVICE_ID, AmcConstants.FmtFeildName.SOURCE};
 	}
 	
 	private AMCMessageParser(String original, MappingRule[] mappingRules, String[] outputKeys){
@@ -53,7 +53,7 @@ public class AMCMessageParser {
 	 * @author LiangMeng
 	 */
 	private void init() throws Exception{
-		recordFmtKey = new RecordFmtKey(data.get(AmcConstants.TENANT_ID),data.get(AmcConstants.SERVICE_ID),data.get(AmcConstants.SOURCE));
+		recordFmtKey = new RecordFmtKey(data.get(AmcConstants.FmtFeildName.TENANT_ID),data.get(AmcConstants.FmtFeildName.SERVICE_ID),data.get(AmcConstants.FmtFeildName.SOURCE));
 		Map<String, Integer> inputMappingRule = mappingRules[0].getIndexes(recordFmtKey);
 		for (Entry<String, Integer> entry : inputMappingRule.entrySet()) {
 			data.put(entry.getKey(), inputDatas[entry.getValue()]);

@@ -1,13 +1,13 @@
 package com.ai.baas.amc.topology.core.bolt;
 
 import java.sql.Connection;
-import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,11 +26,11 @@ import com.ai.baas.dshm.client.CacheFactoryUtil;
 import com.ai.baas.dshm.client.impl.CacheBLMapper;
 import com.ai.baas.dshm.client.impl.DshmClient;
 import com.ai.baas.dshm.client.interfaces.IDshmClient;
-import com.ai.baas.storm.duplicate.DuplicateChecking;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.jdbc.JdbcTemplate;
 import com.ai.baas.storm.message.MappingRule;
 import com.ai.baas.storm.util.BaseConstants;
+import com.ai.opt.base.exception.BusinessException;
 import com.ai.paas.ipaas.mcs.interfaces.ICacheClient;
 
 /**
@@ -76,31 +76,157 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             AMCMessageParser messageParser = AMCMessageParser.parseObject(inputData, mappingRules,
                     outputFields);
             Map<String, String> data = messageParser.getData();
-            String tenantId = data.get(AmcConstants.TENANT_ID);
+            String tenantId = data.get(AmcConstants.FmtFeildName.TENANT_ID);
+            String subsId = data.get(AmcConstants.FmtFeildName.SUBS_ID);
             /* 2.根据传入的详单科目查询对应的账单科目 */
-            String drSubject1 = data.get(AmcConstants.SUBJECT1);
+            String drSubject1 = data.get(AmcConstants.FmtFeildName.SUBJECT1);
             String billSubject1 = this.queryBillSubject(tenantId,drSubject1);
-            String drSubject2 = data.get(AmcConstants.SUBJECT2);
+            String drSubject2 = data.get(AmcConstants.FmtFeildName.SUBJECT2);
             String billSubject2 = this.queryBillSubject(tenantId,drSubject2);
-            String drSubject3 = data.get(AmcConstants.SUBJECT3);
+            String drSubject3 = data.get(AmcConstants.FmtFeildName.SUBJECT3);
             String billSubject3 = this.queryBillSubject(tenantId,drSubject3);
-            /* 3.累账，将记录中的数据，增加到对应账单中(记录到内存中，不沉淀到数据库) */
-            String fee1 = data.get(AmcConstants.FEE1);
-            if(!"0".equals(fee1)){//如果费用不为0，则进行累账
-                
-            }
-            /* 4.优惠计算 */
-            /* 4.1 根据产品信息，查询该账户订购的产品列表 */
             
+            /* 3.累账，将记录中的数据，增加到对应账单中(记录到内存中，不沉淀到数据库) */
+            List<AmcChargeBean> chargeListDB = this.queryCharge(data);
+            String fee1 = data.get(AmcConstants.FmtFeildName.FEE1);
+            String fee2 = data.get(AmcConstants.FmtFeildName.FEE2);
+            String fee3 = data.get(AmcConstants.FmtFeildName.FEE3);
+            /*累账后的结果放入该处*/
+            List<AmcChargeBean> chargeListAfter = new ArrayList<AmcChargeBean>(); 
+            /* 3.1 对fee1判断并累账到对应的科目 */
+            if(fee1!=null && !"0".equals(fee1)){//如果费用不为0，则进行累账
+                AmcChargeBean beanAfter = new AmcChargeBean();
+                /*3.1.1 遍历db中的数据，找到科目1对应的数据，如果找到，则将金额加入totalAmount*/
+                for(AmcChargeBean amcChargeBean :chargeListDB){
+                    if(billSubject1.equals(amcChargeBean.getSubjectId())){
+                        amcChargeBean.setTotalAmount(amcChargeBean.getTotalAmount()+Long.parseLong(fee1));
+                        beanAfter = amcChargeBean;
+                    } 
+                }
+                /*3.1.2 如果没有找到科目1对应的账单数据，则创建一个*/
+                if(beanAfter.getAcctId()==0){
+                    this.initChargeBean(beanAfter,data,Long.parseLong(fee1),Long.parseLong(billSubject1));
+                }
+                /*3.1.3 将结果存入处理后的list*/
+                chargeListAfter.add(beanAfter);
+            }
+            /* 3.2 对fee2判断并累账到对应的科目 */
+            if(fee2!=null && !"0".equals(fee2)){//如果费用不为0，则进行累账
+                AmcChargeBean beanAfter = new AmcChargeBean();
+                /*3.2.1 遍历db中的数据，找到科目1对应的数据，如果找到，则将金额加入totalAmount*/
+                for(AmcChargeBean amcChargeBean :chargeListDB){
+                    if(billSubject2.equals(amcChargeBean.getSubjectId())){
+                        amcChargeBean.setTotalAmount(amcChargeBean.getTotalAmount()+Long.parseLong(fee2));
+                        beanAfter = amcChargeBean;
+                    } 
+                }
+                /*3.2.2 如果没有找到科目1对应的账单数据，则创建一个*/
+                if(beanAfter.getAcctId()==0){
+                    this.initChargeBean(beanAfter,data,Long.parseLong(fee2),Long.parseLong(billSubject2));
+                }
+                /*3.2.3 将结果存入处理后的list*/
+                chargeListAfter.add(beanAfter);
+            }
+            /* 3.3 对fee3判断并累账到对应的科目 */
+            if(fee3!=null && !"0".equals(fee3)){//如果费用不为0，则进行累账
+                AmcChargeBean beanAfter = new AmcChargeBean();
+                /*3.3.1 遍历db中的数据，找到科目1对应的数据，如果找到，则将金额加入totalAmount*/
+                for(AmcChargeBean amcChargeBean :chargeListDB){
+                    if(billSubject3.equals(amcChargeBean.getSubjectId())){
+                        amcChargeBean.setTotalAmount(amcChargeBean.getTotalAmount()+Long.parseLong(fee3));
+                        beanAfter = amcChargeBean;
+                    } 
+                }
+                /*3.3.2 如果没有找到科目1对应的账单数据，则创建一个*/
+                if(beanAfter.getAcctId()==0){
+                    this.initChargeBean(beanAfter,data,Long.parseLong(fee3),Long.parseLong(billSubject3));
+                }
+                /*3.3.3 将结果存入处理后的list*/
+                chargeListAfter.add(beanAfter);
+            }
+            
+            /* 4.优惠计算 */
+            /* 4.1 查询该账户订购的产品列表 */
+            List<Map<String, String>> productList = this.queryProductList(tenantId,subsId);            
             /* 4.2 循环遍历产品列表，根据优先级，查询对应的扩展信息 */
             
-            /* 4.3 根据扩展信息中相应的参数配置，计算优惠额度，对账单项进行优惠 */
-            
-            /* 5.将计算后结果输出到账单表 */
-            
+            for(Map<String,String> product:productList){
+                String productId = product.get("product_id");
+                /* 4.3 根据扩展信息中相应的参数配置，计算优惠额度，对账单项进行优惠 */
+                List<Map<String, String>> productDetailList = this.queryProductDetailList(tenantId,productId);
+                for(Map<String, String> pruductDetailMap :productDetailList){
+                    String calcType = pruductDetailMap.get("calc_type");
+                    String newSubject = pruductDetailMap.get("new_subject");
+                    String billSubject = pruductDetailMap.get("bill_subject");
+                    String refSubject = pruductDetailMap.get("ref_subject");
+                    /*4.3.1 保底*/
+                    if("bd".equals(calcType)){
+                        long billSubjectAmount = 0;
+                        long refSubjectAmount = 0;
+                        /*4.3.1.1 获取参考科目，计费科目的金额*/
+                        for(AmcChargeBean amcChargeBean: chargeListAfter){
+                            if(amcChargeBean.getSubjectId().equals(billSubject)){
+                                billSubjectAmount=amcChargeBean.getTotalAmount(); 
+                            }
+                            if(amcChargeBean.getSubjectId().equals(refSubject)){
+                                refSubjectAmount=amcChargeBean.getTotalAmount(); 
+                            }
+                        }
+                        /*4.3.1.2 获取该产品保底金额*/
+                        List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId, "bd_amount");
+                        long bdAmount = Long.parseLong(extList.get(0).get("bd_amount"));
+                        AmcChargeBean amcChargeBean = new AmcChargeBean();
+                        if(refSubjectAmount<bdAmount){//
+                            /*4.3.1.3 如果参考科目金额小于保底，则将计费科目金额 */
+                            this.initChargeBean(amcChargeBean, data, (bdAmount-billSubjectAmount), Long.parseLong(newSubject));
+                            this.saveAmcChargeBean(amcChargeBean);
+                            this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(newSubject));
+                            this.saveAmcChargeBean(amcChargeBean);
+                        }else{
+                            /*4.3.1.4 如果参考科目金额小于保底，则将计费科目金额 */
+                            this.initChargeBean(amcChargeBean, data, (0), Long.parseLong(newSubject));
+                            this.saveAmcChargeBean(amcChargeBean);
+                            this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(newSubject));
+                            this.saveAmcChargeBean(amcChargeBean);
+                        }
+                    }
+                    /*4.3.2 保底*/
+                    if("fd".equals(calcType)){
+                        long billSubjectAmount = 0;
+                        long refSubjectAmount = 0;
+                        /*4.3.2.1 获取参考科目，计费科目的金额*/
+                        for(AmcChargeBean amcChargeBean: chargeListAfter){
+                            if(amcChargeBean.getSubjectId().equals(billSubject)){
+                                billSubjectAmount=amcChargeBean.getTotalAmount(); 
+                            }
+                            if(amcChargeBean.getSubjectId().equals(refSubject)){
+                                refSubjectAmount=amcChargeBean.getTotalAmount(); 
+                            }
+                        }
+                        /*4.3.2.2 获取该产品封顶金额*/
+                        List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId, "fd_amount");
+                        long fdAmount = Long.parseLong(extList.get(0).get("fd_amount"));    
+                        AmcChargeBean amcChargeBean = new AmcChargeBean();                   
+                        if(refSubjectAmount > fdAmount){
+                            /*4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额*/
+                            this.initChargeBean(amcChargeBean, data, (fdAmount), Long.parseLong(billSubject));
+                            this.saveAmcChargeBean(amcChargeBean);
+                        }else if(refSubjectAmount <= fdAmount){
+                            /*4.3.2.4 如果参考科目金额小于或等于封顶金额，则计费金额等于计费金额*/
+                            this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(billSubject));
+                            this.saveAmcChargeBean(amcChargeBean);
+                        }
+                    }
+                }
+            }
+                        
             /* 6.发送信控消息 */
+            this.sendXkMsg(inputData);
             
-        } catch (Exception e) {
+        }catch (BusinessException e1) {
+            /*处理各种异常*/
+            LOG.error("账务优惠拓扑异常：["+e1.getMessage()+"]",e1);
+        }catch (Exception e) {
            LOG.error("账务优惠拓扑异常：["+e.getMessage()+"]",e);
         }
     }
@@ -117,6 +243,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
      */
     private List<AmcChargeBean> queryCharge( Map<String, String> data){
         StringBuffer sql = new StringBuffer();
+        sql.append("");
         List<AmcChargeBean> duplicateCheckings = JdbcTemplate.query(sql.toString(), BaseConstants.JDBC_DEFAULT, new BeanListHandler<AmcChargeBean>(AmcChargeBean.class));
         return duplicateCheckings;
     }
@@ -138,22 +265,66 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
         if(results!=null&&results.size()>0){
             billSubject = results.get(0).get("bill_subject");
         }
-        return billSubject;
-       
+        return billSubject;       
     }
-
+    /**
+     * 查询用户订购产品列表
+     * @param data
+     * @return
+     * @author LiangMeng
+     */
+    private List<Map<String, String>> queryProductList(String tenantId,String subsId) {        
+        Map<String,String> params = new TreeMap<String,String>();
+        params.put("tenant_id", tenantId); 
+        List<Map<String, String>> results=client.list("user_product_info")
+             .where(params)
+             .executeQuery(cacheClient);
+        return results;       
+    }
+    /**
+     * 根据产品id查询产品详细信息
+     * @param productId
+     * @return
+     * @author LiangMeng
+     */
+    private List<Map<String, String>> queryProductDetailList(String tenantId,String productId) {        
+        Map<String,String> params = new TreeMap<String,String>();
+        params.put("tenant_id", tenantId); 
+        params.put("product_id", productId); 
+        List<Map<String, String>> results=client.list("amc_product_detail")
+             .where(params)
+             .executeQuery(cacheClient);
+        return results;       
+    }
+    /**
+     * 根据产品id查询产品扩展信息
+     * @param productId
+     * @return
+     * @author LiangMeng
+     */
+    private List<Map<String, String>> queryProductExtList(String tenantId,String productId,String extName) {        
+        Map<String,String> params = new TreeMap<String,String>();
+        params.put("tenant_id", tenantId); 
+        params.put("product_id", productId); 
+        params.put("ext_name", extName); 
+        List<Map<String, String>> results=client.list("amc_product_ext")
+             .where(params)
+             .executeQuery(cacheClient);
+        return results;       
+    }
     /**
      * 将计算后结果输出到账单表
      * 
      * @return
      * @author LiangMeng
      */
-    private int saveBill(String sql) {
+    private int saveAmcChargeBean(AmcChargeBean amcChargeBean) {
         int result = 0;
         Connection conn = null;
         try {
+            StringBuffer sql = new StringBuffer();
             conn = conn = JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT);
-            result = JdbcTemplate.update(sql, conn);
+            result = JdbcTemplate.update(sql.toString(), conn);
         } catch (Exception e) {
             LOG.error("账务优惠拓扑异常：["+e.getMessage()+"]",e);
         }
@@ -167,8 +338,27 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
      * @return
      * @author LiangMeng
      */
-    private String sendXkMsg() {
+    private String sendXkMsg(String data) {
         return null;
+    }
+    
+    /**
+     * 初始化账单详细表信息
+     * @param amcChargeBean
+     * @param data
+     * @author LiangMeng
+     */
+    private void initChargeBean(AmcChargeBean amcChargeBean,Map<String,String> data,long fee,long subjectId){
+        amcChargeBean.setAcctId(Long.parseLong(data.get(AmcConstants.FmtFeildName.ACCT_ID)));
+        amcChargeBean.setBalance(fee);
+        amcChargeBean.setCustId(Long.parseLong(data.get(AmcConstants.FmtFeildName.CUST_ID)));
+        amcChargeBean.setDiscTotalAmount(fee);
+        amcChargeBean.setLastPayDate(new Date());
+        amcChargeBean.setPayStatus(1l);
+        amcChargeBean.setServiceId(Long.parseLong(data.get(AmcConstants.FmtFeildName.SERVICE_ID)));
+        amcChargeBean.setSubjectId(subjectId);
+        amcChargeBean.setSubsId(Long.parseLong(data.get(AmcConstants.FmtFeildName.SUBS_ID)));
+        amcChargeBean.setTotalAmount(fee);
     }
 
 }

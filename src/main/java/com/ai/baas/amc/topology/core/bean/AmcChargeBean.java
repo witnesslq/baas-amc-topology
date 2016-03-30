@@ -1,7 +1,7 @@
 package com.ai.baas.amc.topology.core.bean;
 
 import java.io.Serializable;
-import java.sql.Date;
+import java.util.Date;
 
 public class AmcChargeBean implements Serializable {
 
