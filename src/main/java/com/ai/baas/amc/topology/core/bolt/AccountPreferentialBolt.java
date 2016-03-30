@@ -22,6 +22,7 @@ import backtype.storm.tuple.Tuple;
 import com.ai.baas.amc.topology.core.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
+import com.ai.baas.amc.topology.core.util.KafkaProxy;
 import com.ai.baas.dshm.client.CacheFactoryUtil;
 import com.ai.baas.dshm.client.impl.CacheBLMapper;
 import com.ai.baas.dshm.client.impl.DshmClient;
@@ -49,6 +50,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
     private MappingRule[] mappingRules = new MappingRule[1];
     private ICacheClient cacheClient = null;
     private IDshmClient client=null;
+    private KafkaProxy kafkaProxy = null;
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         LOG.info("账务优惠bolt[prepare方法]...");
@@ -64,6 +66,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
         if(cacheClient==null){
             cacheClient =  CacheFactoryUtil.getCacheClient(CacheBLMapper.CACHE_BL_CAL_PARAM);
         }
+        kafkaProxy = KafkaProxy.getInstance(stormConf);
     }
 
     @Override
@@ -151,16 +154,16 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             /* 4.2 循环遍历产品列表，根据优先级，查询对应的扩展信息 */
             
             for(Map<String,String> product:productList){
-                String productId = product.get("product_id");
+                String productId = product.get(AmcConstants.ProductInfo.PRODUCT_ID);
                 /* 4.3 根据扩展信息中相应的参数配置，计算优惠额度，对账单项进行优惠 */
                 List<Map<String, String>> productDetailList = this.queryProductDetailList(tenantId,productId);
                 for(Map<String, String> pruductDetailMap :productDetailList){
-                    String calcType = pruductDetailMap.get("calc_type");
-                    String newSubject = pruductDetailMap.get("new_subject");
-                    String billSubject = pruductDetailMap.get("bill_subject");
-                    String refSubject = pruductDetailMap.get("ref_subject");
+                    String calcType = pruductDetailMap.get(AmcConstants.ProductInfo.CALC_TYPE);
+                    String newSubject = pruductDetailMap.get(AmcConstants.ProductInfo.NEW_SUBJECT);
+                    String billSubject = pruductDetailMap.get(AmcConstants.ProductInfo.BILL_SUBJECT);
+                    String refSubject = pruductDetailMap.get(AmcConstants.ProductInfo.REF_SUBJECT);
                     /*4.3.1 保底*/
-                    if("bd".equals(calcType)){
+                    if(AmcConstants.ProductInfo.CALC_TYPE_BD.equals(calcType)){
                         long billSubjectAmount = 0;
                         long refSubjectAmount = 0;
                         /*4.3.1.1 获取参考科目，计费科目的金额*/
@@ -173,8 +176,8 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                             }
                         }
                         /*4.3.1.2 获取该产品保底金额*/
-                        List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId, "bd_amount");
-                        long bdAmount = Long.parseLong(extList.get(0).get("bd_amount"));
+                        List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId,AmcConstants.ProductInfo.BD_AMOUNT);
+                        long bdAmount = Long.parseLong(extList.get(0).get(AmcConstants.ProductInfo.BD_AMOUNT));
                         AmcChargeBean amcChargeBean = new AmcChargeBean();
                         if(refSubjectAmount<bdAmount){//
                             /*4.3.1.3 如果参考科目金额小于保底，则将计费科目金额 */
@@ -190,8 +193,8 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                             this.saveAmcChargeBean(amcChargeBean);
                         }
                     }
-                    /*4.3.2 保底*/
-                    if("fd".equals(calcType)){
+                    /*4.3.2 封顶*/
+                    if(AmcConstants.ProductInfo.CALC_TYPE_FD.equals(calcType)){
                         long billSubjectAmount = 0;
                         long refSubjectAmount = 0;
                         /*4.3.2.1 获取参考科目，计费科目的金额*/
@@ -204,8 +207,8 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                             }
                         }
                         /*4.3.2.2 获取该产品封顶金额*/
-                        List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId, "fd_amount");
-                        long fdAmount = Long.parseLong(extList.get(0).get("fd_amount"));    
+                        List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId, AmcConstants.ProductInfo.FD_AMOUNT);
+                        long fdAmount = Long.parseLong(extList.get(0).get(AmcConstants.ProductInfo.FD_AMOUNT));    
                         AmcChargeBean amcChargeBean = new AmcChargeBean();                   
                         if(refSubjectAmount > fdAmount){
                             /*4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额*/
@@ -221,11 +224,12 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             }
                         
             /* 6.发送信控消息 */
-            this.sendXkMsg(inputData);
+            kafkaProxy.sendMessage(inputData);
             
-        }catch (BusinessException e1) {
+        }catch (BusinessException e) {
             /*处理各种异常*/
-            LOG.error("账务优惠拓扑异常：["+e1.getMessage()+"]",e1);
+            //TODO
+            LOG.error("账务优惠拓扑异常：["+e.getMessage()+"]",e);
         }catch (Exception e) {
            LOG.error("账务优惠拓扑异常：["+e.getMessage()+"]",e);
         }
@@ -323,23 +327,13 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
         Connection conn = null;
         try {
             StringBuffer sql = new StringBuffer();
-            conn = conn = JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT);
+            conn = JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT);
             result = JdbcTemplate.update(sql.toString(), conn);
         } catch (Exception e) {
             LOG.error("账务优惠拓扑异常：["+e.getMessage()+"]",e);
         }
        
         return result;
-    }
-
-    /**
-     * 发送信控消息
-     * 
-     * @return
-     * @author LiangMeng
-     */
-    private String sendXkMsg(String data) {
-        return null;
     }
     
     /**

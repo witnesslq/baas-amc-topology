@@ -79,4 +79,51 @@ public class AmcConstants {
 	    public static final String FAIL_CODE_DUP = "AMC-000001";
 	    
 	}
+	/**
+	 * 优惠产品相关配置
+	 * Date: 2016年3月30日 <br>
+	 * Copyright (c) 2016 asiainfo.com <br>
+	 * 
+	 * @author LiangMeng
+	 */
+	public static class ProductInfo{
+	    //产品ID
+	    public static final String PRODUCT_ID = "product_id";
+        //优惠类型
+        public static final String CALC_TYPE = "calc_type";
+        //新科目ID用于保底
+        public static final String NEW_SUBJECT = "new_subject";
+        //账单科目
+        public static final String BILL_SUBJECT = "bill_subject";
+        //参考科目
+        public static final String REF_SUBJECT = "ref_subject";
+        
+
+        //优惠类型:保底
+        public static final String CALC_TYPE_BD = "bd";
+        //保底金额
+        public static final String BD_AMOUNT = "bd_amount";
+        //优惠类型:封顶
+        public static final String CALC_TYPE_FD = "fd";
+        //封顶金额
+        public static final String FD_AMOUNT = "fd_amount";
+	    
+	}
+	/**
+	 * 卡夫卡相关配置
+	 * Date: 2016年3月30日 <br>
+	 * Copyright (c) 2016 asiainfo.com <br>
+	 * 
+	 * @author LiangMeng
+	 */
+	public static class KafkaConfig{
+	    //broker list
+	    public static final String BROKER_LIST = "metadata.broker.list";
+	    //broker list
+        public static final String SERIALIZER_CLASS = "serializer.class";
+        //broker list
+        public static final String REQUIRED_ACKS = "request.required.acks";
+        //broker list
+        public static final String KAFKA_TOPIC_XK = "kafka.topic.xk";
+	}
 }
