@@ -32,8 +32,10 @@ dependencies{
     compile 'org.apache.hbase:hbase-client:1.1.2'
     compile 'commons-dbutils:commons-dbutils:1.5'
     compile 'commons-beanutils:commons-beanutils:1.9.2'
+    compile 'org.apache.hbase:hbase-common:1.1.2'
+    compile 'org.apache.hadoop:hadoop-common:2.7.1'
     //内部依赖
-    //compile 'com.ai.baas.storm:baas-storm:0.1.2-SNAPSHOT'
+    compile 'com.ai.baas.storm:baas-storm:0.1.2-SNAPSHOT'
     compile "com.ai.opt:opt-base:${optBaseVersion}"
     compile 'com.ai.baas:baas-dshm-sdk:1.0.6-SNAPSHOT'
     compile 'com.ai.opt.sdk:opt-sdk:1.0.2-SNAPSHOT'
