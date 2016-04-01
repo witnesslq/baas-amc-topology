@@ -151,6 +151,7 @@ public class AmcConstants {
 	public static class CacheConfig{
 	    
 	    public static final String CCS_APPNAME = "ccs.appname";
+	    
 	    public static final String CCS_ZK_ADDRESS = "ccs.zk_address";
         //
         public static final String AMC_DR_BILL_SUBJECT_MAP = "amc_dr_bill_subject_map";

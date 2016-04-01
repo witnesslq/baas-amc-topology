@@ -55,22 +55,33 @@ public class AmcUtil {
     }
     
     /**
-     * 获取bean的属性列表
+     * 将属性值放入bean
      * @param bean
      * @return
      * @author LiangMeng
      */
     public static Object covertCacheDataToBean(Object bean,String[] values){
         List<Field> fieldList = getBeansField(bean);
-        if(fieldList.size()!=values.length){
-            throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_GET_CACHE_DATA, "缓存中获取数据格式不正确");
-        }
-        for(Field field :fieldList){
-            String type = field.getType().toString();//得到此属性的类型  
-            if("String".equals(type)){
-//                field.set(obj, value);
+        try {
+            if(fieldList.size()!=values.length){
+                throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_GET_CACHE_DATA, "缓存中获取数据格式不正确");
             }
-        }
+            for(int i=0;i<fieldList.size();i++){
+                Field field = fieldList.get(i);
+                field.setAccessible(true); //设置些属性是可以访问的  
+                String value = values[i];
+                String type = field.getType().toString();//得到此属性的类型  
+                if(type.endsWith("String")){
+                    field.set(bean, String.valueOf(value));
+                }
+                if(type.endsWith("Long")||type.equals("long")){
+                    field.set(bean, Long.valueOf(value));
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("缓存中获取数据，转换报文异常:"+e,e);
+            throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_GET_CACHE_DATA, "缓存中获取数据，转换报文异常");
+        } 
         return fieldList;
     }
 }
