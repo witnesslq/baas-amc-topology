@@ -86,7 +86,7 @@ public class AmcConstants {
         /**/
         public static final String FAIL_CODE_WRITE_DB_DATA = "AMC-000004";
         /**/
-        public static final String FAIL_CODE_SEND_KFK_MSG = "AMC-000005"
+        public static final String FAIL_CODE_SEND_KFK_MSG = "AMC-000005";
 	    
 	}
 	/**
