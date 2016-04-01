@@ -1,44 +1,23 @@
 package com.ai.baas.amc.topology.core.util;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ai.baas.storm.failbill.FailureBill;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.jdbc.JdbcTemplate;
 import com.ai.baas.storm.util.BaseConstants;
+import com.ai.opt.base.exception.BusinessException;
 
 public class AmcUtil {
 
     private static Logger LOG = LoggerFactory.getLogger(AmcUtil.class);
-    /**
-     * 构造错单格式
-     * @param inputData
-     * @param data
-     * @return
-     * @author LiangMeng
-     */
-    public static FailureBill initFailureBill(String inputData,Map<String,String> data){
-        FailureBill failureBill = new FailureBill();
-        failureBill.setTenantId(data.get(AmcConstants.FmtFeildName.TENANT_ID));
-        failureBill.setServiceId(data.get(AmcConstants.FmtFeildName.SERVICE_ID));
-        failureBill.setSource(data.get(AmcConstants.FmtFeildName.SOURCE));
-        failureBill.setBsn(data.get(AmcConstants.FmtFeildName.BSN));
-        failureBill.setSn(data.get(AmcConstants.FmtFeildName.SN));
-        //failureBill.setAccountPeriod(data.get(AmcConstants.TENANT_ID));
-        failureBill.setArrivalTime(data.get(AmcConstants.FmtFeildName.START_TIME));
-        failureBill.setFailStep(data.get(AmcConstants.FailConstant.FAIL_STEP_DUP));
-        failureBill.setFailCode(data.get(AmcConstants.FailConstant.FAIL_CODE_DUP));
-        failureBill.setFailReason("重复数据");
-        failureBill.setFailPakcet(inputData);
-        failureBill.setFailDate(new SimpleDateFormat("yyyyMMddhhmmss").format(new Date()));
-        return failureBill;
-    }
+    
     /**
      * 执行jdbc更新操作
      * @param sql
@@ -56,5 +35,42 @@ public class AmcUtil {
         }
        
         return result;
+    }
+    
+    /**
+     * 获取bean的属性列表
+     * @param bean
+     * @return
+     * @author LiangMeng
+     */
+    public static List<Field> getBeansField(Object bean){
+        Field[] fields = bean.getClass().getDeclaredFields(); 
+        List<Field> fieldList = new ArrayList<Field>();
+        for(Field val :fields){
+            if(!"serialVersionUID".equals(val.getName())){
+                fieldList.add(val);
+            }
+        }
+        return fieldList;
+    }
+    
+    /**
+     * 获取bean的属性列表
+     * @param bean
+     * @return
+     * @author LiangMeng
+     */
+    public static Object covertCacheDataToBean(Object bean,String[] values){
+        List<Field> fieldList = getBeansField(bean);
+        if(fieldList.size()!=values.length){
+            throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_GET_CACHE_DATA, "缓存中获取数据格式不正确");
+        }
+        for(Field field :fieldList){
+            String type = field.getType().toString();//得到此属性的类型  
+            if("String".equals(type)){
+//                field.set(obj, value);
+            }
+        }
+        return fieldList;
     }
 }

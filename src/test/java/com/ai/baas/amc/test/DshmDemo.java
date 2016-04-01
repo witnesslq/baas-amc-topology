@@ -2,6 +2,7 @@ package com.ai.baas.amc.test;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
@@ -16,8 +17,12 @@ public class DshmDemo {
         IDshmClient client=null;
         if(client==null)
           client=new DshmClient();
+
+        Properties p=new Properties();
+        p.setProperty("ccs.appname", "aiopt-baas-dshm");
+        p.setProperty("ccs.zk_address", "10.1.130.84:39181");
         ICacheClient cacheClient =  CacheFactoryUtil
-                   .getCacheClient(CacheBLMapper.CACHE_BL_CAL_PARAM);
+                   .getCacheClient(p,CacheBLMapper.CACHE_BL_CAL_PARAM);
         Map<String,String> params = new TreeMap<String,String>();
         params.put("price_code", "999"); 
         params.put("tenant_id", "VIV-BYD");

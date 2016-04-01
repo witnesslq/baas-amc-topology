@@ -73,10 +73,20 @@ public class AmcConstants {
 	    /**错误环节定义*/
 	    /*查重环节*/
 	    public static final String FAIL_STEP_DUP = "AMC-duplicate-checking";
-	    
+        /*查重环节*/
+        public static final String FAIL_STEP_PRE = "AMC-account-preferential";
+        
 	    /**错误编码定义*/
 	    /*重复数据*/
 	    public static final String FAIL_CODE_DUP = "AMC-000001";
+	    /**/
+        public static final String FAIL_CODE_GET_CACHE_DATA = "AMC-000002";
+        /**/
+        public static final String FAIL_CODE_READ_DB_DATA = "AMC-000003";
+        /**/
+        public static final String FAIL_CODE_WRITE_DB_DATA = "AMC-000004";
+        /**/
+        public static final String FAIL_CODE_SEND_KFK_MSG = "AMC-000005"
 	    
 	}
 	/**
@@ -99,6 +109,11 @@ public class AmcConstants {
         public static final String REF_SUBJECT = "ref_subject";
         
 
+        //扩展名称字段
+        public static final String EXT_NAME = "ext_name";
+        //扩展值字段
+        public static final String EXT_VALUE = "ext_value";
+        
         //优惠类型:保底
         public static final String CALC_TYPE_BD = "bd";
         //保底金额
@@ -126,4 +141,27 @@ public class AmcConstants {
         //broker list
         public static final String KAFKA_TOPIC_XK = "kafka.topic.xk";
 	}
+	/**
+	 * 缓存表配置
+	 * Date: 2016年3月31日 <br>
+	 * Copyright (c) 2016 asiainfo.com <br>
+	 * 
+	 * @author LiangMeng
+	 */
+	public static class CacheConfig{
+	    
+	    public static final String CCS_APPNAME = "ccs.appname";
+	    public static final String CCS_ZK_ADDRESS = "ccs.zk_address";
+        //
+        public static final String AMC_DR_BILL_SUBJECT_MAP = "amc_dr_bill_subject_map";
+        //
+        public static final String BL_SUBS_COMM = "bl_subs_comm";
+        //
+        public static final String AMC_PRODUCT_INFO = "amc_product_info";
+        //
+        public static final String AMC_PRODUCT_DETAIL = "amc_product_detail";
+        //
+        public static final String AMC_PRODUCT_EXT = "amc_product_ext";
+        
+    }
 }

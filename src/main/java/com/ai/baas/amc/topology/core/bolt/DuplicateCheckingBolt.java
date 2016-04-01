@@ -15,6 +15,7 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
+import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.core.util.AmcUtil;
 import com.ai.baas.storm.duplicate.DuplicateCheckingFromHBase;
 import com.ai.baas.storm.failbill.FailBillHandler;
@@ -71,7 +72,7 @@ public class DuplicateCheckingBolt extends BaseBasicBolt {
                 collector.emit(datas);
     	    }else{
     	        /*6.进重单表*/
-    	        FailBillHandler.addFailBillMsg(AmcUtil.initFailureBill(inputData,data));
+    	        FailBillHandler.addFailBillMsg(data,AmcConstants.FailConstant.FAIL_STEP_DUP,AmcConstants.FailConstant.FAIL_CODE_DUP,"重复订单");
     	    }
 	    }catch(Exception e){
 	        LOG.error("查重bolt[execute方法]..."+e.getMessage(),e);
