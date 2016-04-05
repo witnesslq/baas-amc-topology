@@ -8,7 +8,7 @@ sourceCompatibility = 1.7
 ext {
     optBaseVersion = "1.0-SNAPSHOT"
     optSDKVersion = "1.0.2-SNAPSHOT"
-    baasDshmVersion = "1.0.6-SNAPSHOT"
+    baasDshmVersion = "1.0.7-SNAPSHOT"
     
 }
 

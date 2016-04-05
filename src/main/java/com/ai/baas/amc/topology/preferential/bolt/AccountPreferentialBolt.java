@@ -1,4 +1,4 @@
-package com.ai.baas.amc.topology.core.bolt;
+package com.ai.baas.amc.topology.preferential.bolt;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
 
-import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,19 +20,18 @@ import backtype.storm.topology.base.BaseBasicBolt;
 import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
-import com.ai.baas.amc.topology.core.bean.AmcChargeBean;
-import com.ai.baas.amc.topology.core.bean.AmcProductInfoBean;
-import com.ai.baas.amc.topology.core.dao.AmcChargeDAO;
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.core.util.KafkaProxy;
+import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
+import com.ai.baas.amc.topology.preferential.bean.AmcProductInfoBean;
+import com.ai.baas.amc.topology.preferential.dao.AmcChargeDAO;
 import com.ai.baas.dshm.client.CacheFactoryUtil;
 import com.ai.baas.dshm.client.impl.CacheBLMapper;
 import com.ai.baas.dshm.client.impl.DshmClient;
 import com.ai.baas.dshm.client.interfaces.IDshmClient;
 import com.ai.baas.storm.failbill.FailBillHandler;
 import com.ai.baas.storm.jdbc.JdbcProxy;
-import com.ai.baas.storm.jdbc.JdbcTemplate;
 import com.ai.baas.storm.message.MappingRule;
 import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.base.exception.BusinessException;
@@ -104,9 +102,8 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             String fee1 = data.get(AmcConstants.FmtFeildName.FEE1);
             String fee2 = data.get(AmcConstants.FmtFeildName.FEE2);
             String fee3 = data.get(AmcConstants.FmtFeildName.FEE3);
-            
             /* 3.累账，将记录中的数据，增加到对应账单中(记录到内存中，不沉淀到数据库) */
-            List<AmcChargeBean> chargeListDB = this.queryCharge(data);
+            List<AmcChargeBean> chargeListDB = amcChargeDAO.queryChargeList(data);
             /*累账后的结果放入该处*/
             List<AmcChargeBean> chargeListAfter = new ArrayList<AmcChargeBean>(); 
             /* 3.1 对fee1判断并累账到对应的科目 */
@@ -252,18 +249,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
         declarer.declare(new Fields(outputFields));
     }
-    /**
-     * 查询当前账单
-     * @param data
-     * @return
-     * @author LiangMeng
-     */
-    private List<AmcChargeBean> queryCharge( Map<String, String> data){
-        StringBuffer sql = new StringBuffer();
-        sql.append("");
-        List<AmcChargeBean> duplicateCheckings = JdbcTemplate.query(sql.toString(), BaseConstants.JDBC_DEFAULT, new BeanListHandler<AmcChargeBean>(AmcChargeBean.class));
-        return duplicateCheckings;
-    }
+   
     /**
      * 根据传入的详单科目查询对应的账单科目
      * 

@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import com.ai.baas.amc.topology.core.bean.AmcProductInfoBean;
+import com.ai.baas.amc.topology.preferential.bean.AmcProductInfoBean;
 
 public class TestCompare {
     public static void main(String[] args) {

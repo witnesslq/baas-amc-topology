@@ -1,4 +1,4 @@
-package com.ai.baas.amc.topology.core.bean;
+package com.ai.baas.amc.topology.preferential.bean;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -18,7 +18,8 @@ public class AmcChargeBean implements Serializable {
     private Long payStatus       ; // 销帐状态             
     private Date lastPayDate     ;//  最后销帐日期          
     private Long custId             ;//  客户标识              
-    private Long custType        ; // 客户类型    
+    private Long custType        ; // 客户类型            
+    private String tenantId        ; // 客户类型    
     public Long getChargeSeq() {
         return chargeSeq;
     }
@@ -96,6 +97,12 @@ public class AmcChargeBean implements Serializable {
     }
     public void setCustType(Long custType) {
         this.custType = custType;
+    }
+    public String getTenantId() {
+        return tenantId;
+    }
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
    
     

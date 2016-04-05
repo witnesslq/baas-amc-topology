@@ -6,8 +6,8 @@ import java.util.List;
 
 import org.apache.commons.beanutils.BeanUtils;
 
-import com.ai.baas.amc.topology.core.bean.AmcProductInfoBean;
 import com.ai.baas.amc.topology.core.util.AmcUtil;
+import com.ai.baas.amc.topology.preferential.bean.AmcProductInfoBean;
 
 public class BeanUtilDemo {
     BeanUtils beanutil = new BeanUtils();

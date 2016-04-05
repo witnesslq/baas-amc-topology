@@ -1,4 +1,4 @@
-package com.ai.baas.amc.topology.core.bolt;
+package com.ai.baas.amc.topology.preferential.bolt;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

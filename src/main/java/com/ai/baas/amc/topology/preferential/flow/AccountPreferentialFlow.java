@@ -1,18 +1,18 @@
-package com.ai.baas.amc.topology.core.flow;
+package com.ai.baas.amc.topology.preferential.flow;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import backtype.storm.tuple.Fields;
 
-import com.ai.baas.amc.topology.core.bolt.AccountPreferentialBolt;
-import com.ai.baas.amc.topology.core.bolt.DuplicateCheckingBolt;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
+import com.ai.baas.amc.topology.preferential.bolt.AccountPreferentialBolt;
+import com.ai.baas.amc.topology.preferential.bolt.DuplicateCheckingBolt;
 import com.ai.baas.storm.flow.BaseFlow;
 import com.ai.baas.storm.util.BaseConstants;
 
 /**
- * 通用拓扑图
+ * 账务优惠拓扑图
  * Date: 2016年3月23日 <br>
  * Copyright (c) 2016 asiainfo.com <br>
  * 

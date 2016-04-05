@@ -1,4 +1,4 @@
-package com.ai.baas.amc.topology.core.bean;
+package com.ai.baas.amc.topology.preferential.bean;
 
 import java.io.Serializable;
 
