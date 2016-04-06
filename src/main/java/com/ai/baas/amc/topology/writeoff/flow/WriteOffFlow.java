@@ -25,8 +25,6 @@ public class WriteOffFlow extends BaseFlow {
 	public void define() {
 	    /*1.kafkaspout共用*/
 		super.setKafkaSpout();
-		/*2.设置查重bolt*/
-		builder.setBolt(AmcConstants.BoltName.DUPLICATE_CHECKING_BOLT, new DuplicateCheckingBolt(), 1).shuffleGrouping(BaseConstants.KAFKA_SPOUT_NAME);
 		/*3.设置销账bolt*/
         
 	}

@@ -25,7 +25,7 @@ import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.core.util.KafkaProxy;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.preferential.bean.AmcProductInfoBean;
-import com.ai.baas.amc.topology.preferential.dao.AmcChargeDAO;
+import com.ai.baas.amc.topology.preferential.service.AmcChargeSV;
 import com.ai.baas.dshm.client.CacheFactoryUtil;
 import com.ai.baas.dshm.client.impl.CacheBLMapper;
 import com.ai.baas.dshm.client.impl.DshmClient;
@@ -55,7 +55,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
     private IDshmClient client=null;
     private KafkaProxy kafkaProxy = null;
     /*初始化dao*/
-    private AmcChargeDAO amcChargeDAO = new AmcChargeDAO();
+    private AmcChargeSV amcChargeDAO = new AmcChargeSV();
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         LOG.info("账务优惠bolt[prepare方法]...");
@@ -102,8 +102,9 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             String fee1 = data.get(AmcConstants.FmtFeildName.FEE1);
             String fee2 = data.get(AmcConstants.FmtFeildName.FEE2);
             String fee3 = data.get(AmcConstants.FmtFeildName.FEE3);
+            String billMonth = data.get(AmcConstants.FmtFeildName.START_TIME).substring(0,6);
             /* 3.累账，将记录中的数据，增加到对应账单中(记录到内存中，不沉淀到数据库) */
-            List<AmcChargeBean> chargeListDB = amcChargeDAO.queryChargeList(data);
+            List<AmcChargeBean> chargeListDB = amcChargeDAO.queryChargeList(data,billMonth);
             /*累账后的结果放入该处*/
             List<AmcChargeBean> chargeListAfter = new ArrayList<AmcChargeBean>(); 
             /* 3.1 对fee1判断并累账到对应的科目 */
@@ -192,15 +193,15 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         if(refSubjectAmount<bdAmount){//
                             /*4.3.1.3 如果参考科目金额小于保底，则将计费科目金额 */
                             this.initChargeBean(amcChargeBean, data, (bdAmount-billSubjectAmount), Long.parseLong(newSubject));
-                            amcChargeDAO.saveAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(newSubject));
-                            amcChargeDAO.saveAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }else{
                             /*4.3.1.4 如果参考科目金额小于保底，则将计费科目金额 */
                             this.initChargeBean(amcChargeBean, data, (0), Long.parseLong(newSubject));
-                            amcChargeDAO.saveAmcChargeBean( amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+                            amcChargeDAO.saveOrUpdateAmcChargeBean( amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(newSubject));
-                            amcChargeDAO.saveAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }
                     }
                     /*4.3.2 封顶*/
@@ -223,11 +224,11 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         if(refSubjectAmount > fdAmount){
                             /*4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额*/
                             this.initChargeBean(amcChargeBean, data, (fdAmount), Long.parseLong(billSubject));
-                            amcChargeDAO.saveAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }else if(refSubjectAmount <= fdAmount){
                             /*4.3.2.4 如果参考科目金额小于或等于封顶金额，则计费金额等于计费金额*/
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(billSubject));
-                            amcChargeDAO.saveAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }
                     }
                 }
@@ -361,13 +362,15 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
      * @author LiangMeng
      */
     private void initChargeBean(AmcChargeBean amcChargeBean,Map<String,String> data,long fee,long subjectId){
+        amcChargeBean.setTenantId(data.get(AmcConstants.FmtFeildName.TENANT_ID));
         amcChargeBean.setAcctId(Long.parseLong(data.get(AmcConstants.FmtFeildName.ACCT_ID)));
         amcChargeBean.setBalance(fee);
         amcChargeBean.setCustId(Long.parseLong(data.get(AmcConstants.FmtFeildName.CUST_ID)));
-        amcChargeBean.setDiscTotalAmount(fee);
+        amcChargeBean.setDiscTotalAmount(0l);
+        amcChargeBean.setAdjustAfterwards(0l);
         amcChargeBean.setLastPayDate(new Date());
         amcChargeBean.setPayStatus(1l);
-        amcChargeBean.setServiceId(Long.parseLong(data.get(AmcConstants.FmtFeildName.SERVICE_ID)));
+        amcChargeBean.setServiceId(data.get(AmcConstants.FmtFeildName.SERVICE_ID));
         amcChargeBean.setSubjectId(subjectId);
         amcChargeBean.setSubsId(Long.parseLong(data.get(AmcConstants.FmtFeildName.SUBS_ID)));
         amcChargeBean.setTotalAmount(fee);

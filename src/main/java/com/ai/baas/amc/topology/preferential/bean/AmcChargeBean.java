@@ -9,7 +9,7 @@ public class AmcChargeBean implements Serializable {
     private Long chargeSeq       ; // 费用明细编号          
     private Long acctId             ;//  账户ID                
     private Long subsId          ; // 订购标识\群组标识        
-    private Long serviceId       ; // 服务号码             
+    private String serviceId       ; // 服务号码             
     private Long subjectId       ; // 科目代码             
     private Long totalAmount     ; // 原始科目总额           
     private Long adjustAfterwards; // 临时调整总额           
@@ -38,10 +38,11 @@ public class AmcChargeBean implements Serializable {
     public void setSubsId(Long subsId) {
         this.subsId = subsId;
     }
-    public Long getServiceId() {
+    
+    public String getServiceId() {
         return serviceId;
     }
-    public void setServiceId(Long serviceId) {
+    public void setServiceId(String serviceId) {
         this.serviceId = serviceId;
     }
     public Long getSubjectId() {

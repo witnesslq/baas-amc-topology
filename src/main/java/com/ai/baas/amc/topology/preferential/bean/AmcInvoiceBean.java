@@ -19,6 +19,7 @@ public class AmcInvoiceBean implements Serializable {
 	private Long printTimes      ;   //打印次数        
 	private Long custId          ;   //客户标识        
 	private Long custType        ;   //客户类型 
+    private String tenantId       ; //  缴费号码    
     public Long getInvoiceSeq() {
         return invoiceSeq;
     }
@@ -96,6 +97,12 @@ public class AmcInvoiceBean implements Serializable {
     }
     public void setCustType(Long custType) {
         this.custType = custType;
+    }
+    public String getTenantId() {
+        return tenantId;
+    }
+    public void setTenantId(String tenantId) {
+        this.tenantId = tenantId;
     }
 	
 }

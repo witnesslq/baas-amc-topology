@@ -28,7 +28,7 @@ public class AccountPreferentialFlow extends BaseFlow {
 		/*2.设置查重bolt*/
 		builder.setBolt(AmcConstants.BoltName.DUPLICATE_CHECKING_BOLT, new DuplicateCheckingBolt(), 1).shuffleGrouping(BaseConstants.KAFKA_SPOUT_NAME);
 		/*3.设置账务优惠bolt*/
-		builder.setBolt(AmcConstants.BoltName.ACCOUNT_PREFERENTIAL_BOLT, new AccountPreferentialBolt(), 1).fieldsGrouping(AmcConstants.BoltName.DUPLICATE_CHECKING_BOLT, new Fields(AmcConstants.FmtFeildName.ACCT_ID));
+		builder.setBolt(AmcConstants.BoltName.ACCOUNT_PREFERENTIAL_BOLT, new AccountPreferentialBolt(), 1).shuffleGrouping(AmcConstants.BoltName.DUPLICATE_CHECKING_BOLT);
         
 	}
 
