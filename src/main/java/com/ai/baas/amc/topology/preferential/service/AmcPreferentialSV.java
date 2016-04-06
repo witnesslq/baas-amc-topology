@@ -20,15 +20,15 @@ import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.base.exception.SystemException;
 
 /**
- * 账单明细dao
+ * 账务优惠SV
  * Date: 2016年3月31日 <br>
  * Copyright (c) 2016 asiainfo.com <br>
  * 
  * @author LiangMeng
  */
-public class AmcChargeSV implements Serializable{
+public class AmcPreferentialSV implements Serializable{
     private static final long serialVersionUID = 7585528077764269928L;
-    private static Logger LOG = LoggerFactory.getLogger(AmcChargeSV.class);
+    private static Logger LOG = LoggerFactory.getLogger(AmcPreferentialSV.class);
 
     /**
      * 查询当前账单

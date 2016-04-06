@@ -2,7 +2,6 @@ package com.ai.baas.amc.topology.writeoff.bean;
 
 import java.io.Serializable;
 import java.sql.Timestamp;
-import java.util.Date;
 
 public class AmcFundBookBean implements Serializable {
 

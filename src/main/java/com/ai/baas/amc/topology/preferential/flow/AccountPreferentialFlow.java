@@ -3,8 +3,6 @@ package com.ai.baas.amc.topology.preferential.flow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import backtype.storm.tuple.Fields;
-
 import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.preferential.bolt.AccountPreferentialBolt;
 import com.ai.baas.amc.topology.preferential.bolt.DuplicateCheckingBolt;

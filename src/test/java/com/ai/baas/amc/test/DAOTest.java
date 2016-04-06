@@ -7,7 +7,7 @@ import java.util.Map;
 
 import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
-import com.ai.baas.amc.topology.preferential.service.AmcChargeSV;
+import com.ai.baas.amc.topology.preferential.service.AmcPreferentialSV;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.util.BaseConstants;
 
@@ -18,7 +18,7 @@ public class DAOTest {
         Map<String, String> stormConf = new HashMap<String, String>();
         stormConf.put(BaseConstants.JDBC_DEFAULT, "{\"jdbc.driver\":\"com.mysql.jdbc.Driver\",\"jdbc.url\":\"jdbc:mysql://10.1.235.245:31306/dev_baas_amc1?useUnicode=true&characterEncoding=UTF-8\",\"jdbc.username\":\"amcusr01\",\"jdbc.password\":\"amcusr01_123\"}");
         JdbcProxy.loadResources(Arrays.asList(BaseConstants.JDBC_DEFAULT), stormConf);
-        AmcChargeSV dao = new AmcChargeSV();
+        AmcPreferentialSV dao = new AmcPreferentialSV();
         Map<String,String> data = new HashMap<String,String>();
         data.put(AmcConstants.FmtFeildName.SUBS_ID, "1");
         data.put(AmcConstants.FmtFeildName.START_TIME,"2016030101");
@@ -29,7 +29,7 @@ public class DAOTest {
         Map<String, String> stormConf = new HashMap<String, String>();
         stormConf.put(BaseConstants.JDBC_DEFAULT, "{\"jdbc.driver\":\"com.mysql.jdbc.Driver\",\"jdbc.url\":\"jdbc:mysql://10.1.235.245:31306/dev_baas_amc1?useUnicode=true&characterEncoding=UTF-8\",\"jdbc.username\":\"amcusr01\",\"jdbc.password\":\"amcusr01_123\"}");
         JdbcProxy.loadResources(Arrays.asList(BaseConstants.JDBC_DEFAULT), stormConf);
-        AmcChargeSV dao = new AmcChargeSV();
+        AmcPreferentialSV dao = new AmcPreferentialSV();
         AmcChargeBean amcChargeBean = new AmcChargeBean();
         amcChargeBean.setTenantId("TR");
         amcChargeBean.setAcctId(Long.parseLong("11"));

@@ -3,13 +3,7 @@ package com.ai.baas.amc.topology.writeoff.flow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import backtype.storm.tuple.Fields;
-
-import com.ai.baas.amc.topology.core.util.AmcConstants;
-import com.ai.baas.amc.topology.preferential.bolt.AccountPreferentialBolt;
-import com.ai.baas.amc.topology.preferential.bolt.DuplicateCheckingBolt;
 import com.ai.baas.storm.flow.BaseFlow;
-import com.ai.baas.storm.util.BaseConstants;
 
 /**
  * 销账拓扑

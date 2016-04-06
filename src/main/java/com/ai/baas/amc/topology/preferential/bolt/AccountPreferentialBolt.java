@@ -25,7 +25,7 @@ import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.core.util.KafkaProxy;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.preferential.bean.AmcProductInfoBean;
-import com.ai.baas.amc.topology.preferential.service.AmcChargeSV;
+import com.ai.baas.amc.topology.preferential.service.AmcPreferentialSV;
 import com.ai.baas.dshm.client.CacheFactoryUtil;
 import com.ai.baas.dshm.client.impl.CacheBLMapper;
 import com.ai.baas.dshm.client.impl.DshmClient;
@@ -55,7 +55,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
     private IDshmClient client=null;
     private KafkaProxy kafkaProxy = null;
     /*初始化dao*/
-    private AmcChargeSV amcChargeDAO = new AmcChargeSV();
+    private AmcPreferentialSV amcChargeDAO = new AmcPreferentialSV();
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         LOG.info("账务优惠bolt[prepare方法]...");
