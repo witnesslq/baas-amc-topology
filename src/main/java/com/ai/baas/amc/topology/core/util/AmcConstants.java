@@ -75,6 +75,8 @@ public class AmcConstants {
 	    public static final String FAIL_STEP_DUP = "AMC-duplicate-checking";
         /*查重环节*/
         public static final String FAIL_STEP_PRE = "AMC-account-preferential";
+        /*销账环节*/
+        public static final String FAIL_STEP_OWE = "AMC-account-writeoff";
         
 	    /**错误编码定义*/
 	    /*重复数据*/
@@ -87,6 +89,8 @@ public class AmcConstants {
         public static final String FAIL_CODE_WRITE_DB_DATA = "AMC-000004";
         /**/
         public static final String FAIL_CODE_SEND_KFK_MSG = "AMC-000005";
+        /**/
+        public static final String FAIL_CODE_OWE = "AMC-000006";
 	    
 	}
 	/**

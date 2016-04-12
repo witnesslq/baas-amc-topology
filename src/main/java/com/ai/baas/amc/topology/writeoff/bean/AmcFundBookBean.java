@@ -6,34 +6,31 @@ import java.sql.Timestamp;
 public class AmcFundBookBean implements Serializable {
 
     private static final long serialVersionUID = -1050401238763087301L;
-    private String tenantId        ;
-    private String serialCode      ;
-    private String busiOperCode    ;
-    private String acctId          ;
-    private int settleMode      ;
-    private int settleType      ;
-    private long total           ;
-    private int status          ;
-    private Timestamp lastStatusDate  ;
-    private String cancelSerialCode;
-    private Timestamp createTime      ;
+    private String tenantId       ;
+    private String custId         ;
+    private String acctId         ;
+    private long bookId           ;
+    private String subjectType    ;
+    private long subjectId      ;
+    private long balance        ;
+    private String featureCode    ;
+    private String bookStatus     ;
+    private Timestamp effectDate     ;
+    private Timestamp expireDate     ;
+    private Timestamp createTime     ;
+    private long subsFreezeId   ;
+    private long subsId         ;
     public String getTenantId() {
         return tenantId;
     }
     public void setTenantId(String tenantId) {
         this.tenantId = tenantId;
     }
-    public String getSerialCode() {
-        return serialCode;
+    public String getCustId() {
+        return custId;
     }
-    public void setSerialCode(String serialCode) {
-        this.serialCode = serialCode;
-    }
-    public String getBusiOperCode() {
-        return busiOperCode;
-    }
-    public void setBusiOperCode(String busiOperCode) {
-        this.busiOperCode = busiOperCode;
+    public void setCustId(String custId) {
+        this.custId = custId;
     }
     public String getAcctId() {
         return acctId;
@@ -41,42 +38,53 @@ public class AmcFundBookBean implements Serializable {
     public void setAcctId(String acctId) {
         this.acctId = acctId;
     }
-    public int getSettleMode() {
-        return settleMode;
+    public long getBookId() {
+        return bookId;
     }
-    public void setSettleMode(int settleMode) {
-        this.settleMode = settleMode;
+    public void setBookId(long bookId) {
+        this.bookId = bookId;
     }
-    public int getSettleType() {
-        return settleType;
+    public String getSubjectType() {
+        return subjectType;
     }
-    public void setSettleType(int settleType) {
-        this.settleType = settleType;
+    public void setSubjectType(String subjectType) {
+        this.subjectType = subjectType;
     }
-    public long getTotal() {
-        return total;
+    public long getSubjectId() {
+        return subjectId;
     }
-    public void setTotal(long total) {
-        this.total = total;
+    public void setSubjectId(long subjectId) {
+        this.subjectId = subjectId;
     }
-    public int getStatus() {
-        return status;
+    public long getBalance() {
+        return balance;
     }
-    public void setStatus(int status) {
-        this.status = status;
+    public void setBalance(long balance) {
+        this.balance = balance;
     }
-    
-    public String getCancelSerialCode() {
-        return cancelSerialCode;
+    public String getFeatureCode() {
+        return featureCode;
     }
-    public void setCancelSerialCode(String cancelSerialCode) {
-        this.cancelSerialCode = cancelSerialCode;
+    public void setFeatureCode(String featureCode) {
+        this.featureCode = featureCode;
     }
-    public Timestamp getLastStatusDate() {
-        return lastStatusDate;
+    public String getBookStatus() {
+        return bookStatus;
     }
-    public void setLastStatusDate(Timestamp lastStatusDate) {
-        this.lastStatusDate = lastStatusDate;
+    public void setBookStatus(String bookStatus) {
+        this.bookStatus = bookStatus;
+    }
+    public Timestamp getEffectDate() {
+        return effectDate;
+    }
+    public void setEffectDate(Timestamp effectDate) {
+        this.effectDate = effectDate;
+    }
+    public Timestamp getExpireDate() {
+        return expireDate;
+    }
+    public void setExpireDate(Timestamp expireDate) {
+        this.expireDate = expireDate;
     }
     public Timestamp getCreateTime() {
         return createTime;
@@ -84,7 +92,18 @@ public class AmcFundBookBean implements Serializable {
     public void setCreateTime(Timestamp createTime) {
         this.createTime = createTime;
     }
-    
+    public long getSubsFreezeId() {
+        return subsFreezeId;
+    }
+    public void setSubsFreezeId(long subsFreezeId) {
+        this.subsFreezeId = subsFreezeId;
+    }
+    public long getSubsId() {
+        return subsId;
+    }
+    public void setSubsId(long subsId) {
+        this.subsId = subsId;
+    }
     
 
 }

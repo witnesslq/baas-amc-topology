@@ -18,6 +18,7 @@ import com.ai.baas.amc.topology.core.message.AMCMessageParser;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.core.util.KafkaProxy;
 import com.ai.baas.amc.topology.preferential.service.AmcPreferentialSV;
+import com.ai.baas.amc.topology.writeoff.service.AmcWriteOffSV;
 import com.ai.baas.dshm.client.CacheFactoryUtil;
 import com.ai.baas.dshm.client.impl.CacheBLMapper;
 import com.ai.baas.dshm.client.impl.DshmClient;
@@ -48,7 +49,7 @@ public class WriteOffBolt extends BaseBasicBolt {
     private IDshmClient client=null;
     private KafkaProxy kafkaProxy = null;
     /*初始化dao*/
-    private AmcPreferentialSV amcChargeDAO = new AmcPreferentialSV();
+    private AmcWriteOffSV amcWriteOffSV = new AmcWriteOffSV();
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         LOG.info("销账bolt[prepare方法]...");
@@ -84,15 +85,14 @@ public class WriteOffBolt extends BaseBasicBolt {
             data = messageParser.getData();
             String tenantId = data.get(AmcConstants.FmtFeildName.TENANT_ID);
             String acctId = data.get(AmcConstants.FmtFeildName.ACCT_ID);
-            /* 2.根据传入的详单科目查询对应的账单科目 */
-            
-                        
-            /* 6.发送信控消息 */
-            kafkaProxy.sendMessage(inputData);
-            
+            /* 2. 执行销账*/
+            boolean isSuccess = amcWriteOffSV.writeOffCore(acctId, tenantId, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+            if(!isSuccess){
+               throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_OWE, "销账处理失败，tenantId:["+tenantId+"],acct_id:["+acctId+"]");
+            }
         }catch (BusinessException e) {
             /*处理 异常*/
-            FailBillHandler.addFailBillMsg(data,AmcConstants.FailConstant.FAIL_STEP_PRE,e.getErrorCode(),e.getErrorMessage());
+            FailBillHandler.addFailBillMsg(data,AmcConstants.FailConstant.FAIL_STEP_OWE,e.getErrorCode(),e.getErrorMessage());
             LOG.error("销账拓扑异常：["+e.getMessage()+"]",e);
         }catch (Exception e) {
            LOG.error("销账拓扑异常：["+e.getMessage()+"]",e);
