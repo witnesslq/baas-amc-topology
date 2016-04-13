@@ -16,6 +16,7 @@ import backtype.storm.tuple.Tuple;
 
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
+import com.ai.baas.amc.topology.core.util.DSUtil;
 import com.ai.baas.amc.topology.core.util.KafkaProxy;
 import com.ai.baas.amc.topology.preferential.service.AmcPreferentialSV;
 import com.ai.baas.amc.topology.writeoff.service.AmcWriteOffSV;
@@ -58,18 +59,10 @@ public class WriteOffBolt extends BaseBasicBolt {
         /* 2.获取报文格式信息 */
         mappingRules[0] = MappingRule.getMappingRule(MappingRule.FORMAT_TYPE_INPUT,
                 BaseConstants.JDBC_DEFAULT);
-        /* 3.初始化缓存*/
-        if(client==null){
-            client=new DshmClient();
-        }
-        Properties p=new Properties();
-        p.setProperty(AmcConstants.CacheConfig.CCS_APPNAME, (String)stormConf.get(AmcConstants.CacheConfig.CCS_APPNAME));
-        p.setProperty(AmcConstants.CacheConfig.CCS_ZK_ADDRESS, (String)stormConf.get(AmcConstants.CacheConfig.CCS_ZK_ADDRESS));
-        if(cacheClient==null){
-            cacheClient =  CacheFactoryUtil.getCacheClient(p,CacheBLMapper.CACHE_BL_CAL_PARAM);
-        }
-        /*4.初始化kafka*/
+        /* 3.初始化kafka*/
         kafkaProxy = KafkaProxy.getInstance(stormConf);
+        /* 4.初始化序列数据源*/
+        DSUtil.initSeqDS(stormConf);
     }
 
     @Override

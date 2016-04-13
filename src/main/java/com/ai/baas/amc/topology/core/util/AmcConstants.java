@@ -169,4 +169,22 @@ public class AmcConstants {
         public static final String AMC_PRODUCT_EXT = "amc_product_ext";
         
     }
+	/**
+	 * 序列名称
+	 * Date: 2016年4月12日 <br>
+	 * Copyright (c) 2016 asiainfo.com <br>
+	 * 
+	 * @author LiangMeng
+	 */
+	public static class SeqName{
+        
+        public static final String AMC_SETTLE_LOG$SERIAL_CODE$SEQ = "AMC_SETTLE_LOG$SERIAL_CODE$SEQ";
+        
+        public static final String AMC_SETTLE_DETAIL$SERIAL_CODE$SEQ = "AMC_SETTLE_DETAIL$SERIAL_CODE$SEQ";
+        
+        public static final String AMC_FUND_DETAIL$SERIAL_CODE$SEQ = "AMC_FUND_DETAIL$SERIAL_CODE$SEQ";
+        
+        public static final String AMC_FUND_SERIAL$PAY_SERIAL_CODE$SEQ = "AMC_FUND_SERIAL$PAY_SERIAL_CODE$SEQ";
+        
+    }
 }

@@ -9,9 +9,9 @@ public class AmcDeductRuleBean implements Serializable {
 
     private String tenantId;
 
-    private String fundAubject;
+    private String fundSubject;
 
-    private String feeAubject;
+    private String feeSubject;
 
     public String getTenantId() {
         return tenantId;
@@ -21,20 +21,20 @@ public class AmcDeductRuleBean implements Serializable {
         this.tenantId = tenantId;
     }
 
-    public String getFundAubject() {
-        return fundAubject;
+    public String getFundSubject() {
+        return fundSubject;
     }
 
-    public void setFundAubject(String fundAubject) {
-        this.fundAubject = fundAubject;
+    public void setFundSubject(String fundSubject) {
+        this.fundSubject = fundSubject;
     }
 
-    public String getFeeAubject() {
-        return feeAubject;
+    public String getFeeSubject() {
+        return feeSubject;
     }
 
-    public void setFeeAubject(String feeAubject) {
-        this.feeAubject = feeAubject;
+    public void setFeeSubject(String feeSubject) {
+        this.feeSubject = feeSubject;
     }
 
 }
