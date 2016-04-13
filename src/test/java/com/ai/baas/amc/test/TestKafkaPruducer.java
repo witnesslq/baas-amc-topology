@@ -65,7 +65,8 @@ public class TestKafkaPruducer {
     }
 
     public static void main(String[] args) {
-        String path = "E:\\data.txt";
+        //String path = "E:\\data.txt";
+        String path = "E:\\data_wo.txt";
         TestKafkaPruducer simulator = new TestKafkaPruducer();
         simulator.send(path);
     }

@@ -1,7 +1,6 @@
 package com.ai.baas.amc.topology.writeoff.bean;
 
 import java.io.Serializable;
-import java.sql.Timestamp;
 
 public class AmcDeductRuleBean implements Serializable {
 

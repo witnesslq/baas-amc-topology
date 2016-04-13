@@ -61,6 +61,8 @@ public class AmcConstants {
 	    public static final String DUPLICATE_CHECKING_BOLT = "duplicate_checking";
 	    /*账务优惠bolt*/
 	    public static final String ACCOUNT_PREFERENTIAL_BOLT = "account_preferential";
+        /*账务优惠bolt*/
+        public static final String WRITE_OFF_BOLT = "write_off";
 	}
 	/**
 	 * 错误编码、环节定义

@@ -4,7 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ai.baas.amc.topology.core.util.AmcConstants;
-import com.ai.baas.amc.topology.preferential.bolt.DuplicateCheckingBolt;
 import com.ai.baas.amc.topology.writeoff.bolt.WriteOffBolt;
 import com.ai.baas.storm.flow.BaseFlow;
 import com.ai.baas.storm.util.BaseConstants;
@@ -24,12 +23,12 @@ public class WriteOffFlow extends BaseFlow {
 	    /*1.kafkaspout共用*/
 		super.setKafkaSpout();
 		/*3.设置销账bolt*/
-		builder.setBolt(AmcConstants.BoltName.DUPLICATE_CHECKING_BOLT, new WriteOffBolt(), 1).shuffleGrouping(BaseConstants.KAFKA_SPOUT_NAME);
+		builder.setBolt(AmcConstants.BoltName.WRITE_OFF_BOLT, new WriteOffBolt(), 1).shuffleGrouping(BaseConstants.KAFKA_SPOUT_NAME);
         
 	}
 
 	public static void main(String[] args) {
-        LOG.info("账务优惠拓扑开始运行...");
+        LOG.info("销账拓扑开始运行...");
 		WriteOffFlow flow = new WriteOffFlow();
 		flow.run(args);
 	}
