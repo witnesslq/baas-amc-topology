@@ -34,8 +34,6 @@ public class AmcConstants {
         public static final String ACCT_ID = "acct_id";
         /*开始时间*/
         public static final String START_TIME = "start_time";
-        /**/
-        public static final String TRADE_SEQ = "trade_seq";
         /*费用*/
         public static final String FEE1 = "fee1";
         /*详单科目*/

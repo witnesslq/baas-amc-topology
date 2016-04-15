@@ -3,7 +3,6 @@ package com.ai.baas.amc.topology.core.util;
 import java.util.Map;
 import java.util.Properties;
 
-import com.ai.baas.amc.test.ProducerProxy;
 
 import kafka.javaapi.producer.Producer;
 import kafka.producer.KeyedMessage;
@@ -16,7 +15,7 @@ public class KafkaProxy {
 	
 	public static KafkaProxy getInstance(Map<String,String> conf){
         if(instance == null){
-            synchronized(ProducerProxy.class){
+            synchronized(KafkaProxy.class){
                 if(instance == null){
                     instance = new KafkaProxy();
                     loadResources(conf);

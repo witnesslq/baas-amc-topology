@@ -16,8 +16,7 @@ import com.ai.baas.storm.util.BaseConstants;
  * @author LiangMeng
  */
 public class WriteOffFlow extends BaseFlow {
-	private static Logger LOG = LoggerFactory.getLogger(WriteOffFlow.class);
-	
+	private static Logger LOG = LoggerFactory.getLogger(WriteOffFlow.class);	
 	@Override
 	public void define() {
 	    /*1.kafkaspout共用*/
@@ -33,5 +32,4 @@ public class WriteOffFlow extends BaseFlow {
 		flow.run(args);
 	}
 
-	
 }

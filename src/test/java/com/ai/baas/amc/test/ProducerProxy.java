@@ -7,7 +7,7 @@ import kafka.producer.KeyedMessage;
 import kafka.producer.ProducerConfig;
 
 public class ProducerProxy {
-	private static String kafka_name ="amcwriteoffkafka";// "amckafka";
+	//private static String kafka_name ="amcwriteoffkafka";// "amckafka";
 	private static Producer<String, String> producer = null;
 	private static ProducerProxy instance = null;
 	
@@ -32,7 +32,7 @@ public class ProducerProxy {
         producer = new Producer<String, String>(new ProducerConfig(props));
 	}
 	
-	public void sendMessage(String message){
+	public void sendMessage(String message,String kafka_name){
 		KeyedMessage<String, String> data = new KeyedMessage<String, String>(kafka_name, message);
 		producer.send(data);
 	}

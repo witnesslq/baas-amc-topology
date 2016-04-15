@@ -65,14 +65,16 @@ public class DuplicateCheckingBolt extends BaseBasicBolt {
     	    DuplicateCheckingFromHBase checking = new DuplicateCheckingFromHBase();
     	    boolean isSuccess = checking.checkData(data);
     	    /*5.将报文输出到下一环节*/
-    	    if(isSuccess){
+//    	    if(isSuccess){
+    	        LOG.info("查重结果：[不重复，继续流转]...");
                 List<Object> datas = new ArrayList<Object>();
                 datas.add(inputData);
                 collector.emit(datas);
-    	    }else{
-    	        /*6.进重单表*/
-    	        FailBillHandler.addFailBillMsg(data,AmcConstants.FailConstant.FAIL_STEP_DUP,AmcConstants.FailConstant.FAIL_CODE_DUP,"重复订单");
-    	    }
+//    	    }else{
+//    	        LOG.info("查重结果：[重单，进入错单表]...");
+//    	        /*6.进重单表*/
+//    	        FailBillHandler.addFailBillMsg(data,AmcConstants.FailConstant.FAIL_STEP_DUP,AmcConstants.FailConstant.FAIL_CODE_DUP,"重复订单");
+//    	    }
 	    }catch(Exception e){
 	        LOG.error("查重bolt[execute方法]..."+e.getMessage(),e);
         }

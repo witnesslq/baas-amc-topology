@@ -29,7 +29,7 @@ public class TestKafkaPruducer {
 
     public final static String PACKET_HEADER_SPLIT = ",";
 
-    public void send(String path) {
+    public void send(String path,String kafka_name) {
         InputStream in = null;
         BufferedReader reader = null;
         File file;
@@ -45,7 +45,7 @@ public class TestKafkaPruducer {
                 }
                 String message = assembleMessage(sLine);
                 LOG.info("message----"+message);
-                ProducerProxy.getInstance().sendMessage(message);
+                ProducerProxy.getInstance().sendMessage(message,kafka_name);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -65,10 +65,10 @@ public class TestKafkaPruducer {
     }
 
     public static void main(String[] args) {
-        //String path = "E:\\data.txt";
-        String path = "E:\\data_wo.txt";
+        String path = "E:\\data.txt";
+        //String path = "E:\\data_wo.txt";
         TestKafkaPruducer simulator = new TestKafkaPruducer();
-        simulator.send(path);
+        simulator.send(path,"amckafka");
     }
 
 }

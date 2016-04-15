@@ -16,15 +16,12 @@ import backtype.storm.tuple.Tuple;
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.core.util.DSUtil;
-import com.ai.baas.amc.topology.core.util.KafkaProxy;
 import com.ai.baas.amc.topology.writeoff.service.AmcWriteOffSV;
-import com.ai.baas.dshm.client.interfaces.IDshmClient;
 import com.ai.baas.storm.failbill.FailBillHandler;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.message.MappingRule;
 import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.base.exception.BusinessException;
-import com.ai.paas.ipaas.mcs.interfaces.ICacheClient;
 
 /**
  * 销账bolt

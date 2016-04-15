@@ -118,7 +118,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     } 
                 }
                 /*3.1.2 如果没有找到科目1对应的账单数据，则创建一个*/
-                if(beanAfter.getAcctId()==0){
+                if(beanAfter.getAcctId()==null||beanAfter.getAcctId()==0){
                     this.initChargeBean(beanAfter,data,Long.parseLong(fee1),Long.parseLong(billSubject1));
                 }
                 /*3.1.3 将结果存入处理后的list*/
@@ -268,6 +268,8 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
              .executeQuery(cacheClient);
         if(results!=null&&results.size()>0){
             billSubject = results.get(0).get("bill_subject");
+        }else{
+            throw new BusinessException("999999", "根据详单科目["+drSubject+"]查询账单科目不存在");
         }
         return billSubject;       
     }
