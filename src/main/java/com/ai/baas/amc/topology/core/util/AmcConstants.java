@@ -218,6 +218,8 @@ public class AmcConstants {
         public static final String AMC_PRODUCT_DETAIL = "amc_product_detail";
         //
         public static final String AMC_PRODUCT_EXT = "amc_product_ext";
+        //
+        public static final String GN_SUBJECT_FUND = "gn_subject_fund";
         
     }
 	/**

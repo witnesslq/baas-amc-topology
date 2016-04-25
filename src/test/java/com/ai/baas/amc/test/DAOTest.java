@@ -4,17 +4,23 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.core.util.DSUtil;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.preferential.service.AmcPreferentialSV;
 import com.ai.baas.amc.topology.writeoff.service.AmcWriteOffSV;
+import com.ai.baas.dshm.client.CacheFactoryUtil;
+import com.ai.baas.dshm.client.impl.CacheBLMapper;
+import com.ai.baas.dshm.client.impl.DshmClient;
+import com.ai.baas.dshm.client.interfaces.IDshmClient;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.sdk.datasource.OptHikariDataSource;
 import com.ai.opt.sdk.sequence.datasource.SeqDataSourceLoader;
 import com.ai.opt.sdk.sequence.datasource.SeqDataSourceLoaderFactory;
+import com.ai.paas.ipaas.mcs.interfaces.ICacheClient;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
@@ -61,10 +67,22 @@ public class DAOTest {
         stormConf.put(BaseConstants.JDBC_DEFAULT, "{\"jdbc.driver\":\"com.mysql.jdbc.Driver\",\"jdbc.url\":\"jdbc:mysql://10.1.235.245:31306/dev_baas_amc1?useUnicode=true&characterEncoding=UTF-8\",\"jdbc.username\":\"amcusr01\",\"jdbc.password\":\"amcusr01_123\"}");
         JdbcProxy.loadResources(Arrays.asList(BaseConstants.JDBC_DEFAULT), stormConf);
 
+        ICacheClient cacheClient = null;
+        IDshmClient client=null;
+        if(client==null){
+            client=new DshmClient();
+        }
+        Properties p=new Properties();
+        p.setProperty(AmcConstants.CacheConfig.CCS_APPNAME, "aiopt-baas-dshm");
+        p.setProperty(AmcConstants.CacheConfig.CCS_ZK_ADDRESS, "10.1.130.84:39181");
+        if(cacheClient==null){
+            cacheClient =  CacheFactoryUtil.getCacheClient(p,CacheBLMapper.CACHE_BL_CAL_PARAM);
+        }
+        
         DSUtil.initSeqDS(stormConf);
         AmcWriteOffSV sv = new AmcWriteOffSV();
         try {
-            sv.writeOffCore("11", "TR", JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+            sv.writeOffCore("17", "VIV-BYD", JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),cacheClient,client);
         } catch (Exception e) {
             e.printStackTrace();
         }
