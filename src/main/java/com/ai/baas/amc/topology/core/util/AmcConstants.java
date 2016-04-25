@@ -112,6 +112,7 @@ public class AmcConstants {
         //参考科目
         public static final String REF_SUBJECT = "ref_subject";
         
+        
 
         //扩展名称字段
         public static final String EXT_NAME = "ext_name";
@@ -127,6 +128,56 @@ public class AmcConstants {
         //封顶金额
         public static final String FD_AMOUNT = "fd_amount";
 	    
+        
+        //优惠类型:显示折扣
+        public static final String CALC_TYPE_XSZK = "xszk";
+        //折扣率
+        public static final String XSZK_ZKL = "xszk_zkl";
+
+        //生效日期
+        public static final String XSZK_EFFECT_DATE = "xszk_effect_date";
+
+        //失效日期
+        public static final String XSZK_EXPIRE_DATE = "xszk_expire_date";
+        
+
+        //执行时段标志
+        public static final String XSZK_TIME_FLAG = "xszk_time_flag";
+        //执行生效时段
+        public static final String XSZK_EFFECT_TIME = "xszk_effect_time";
+        //执行失效时段
+        public static final String XSZK_EXPIRE_TIME = "xszk_expire_time";
+        
+        /**
+         * 产品状态
+         * Date: 2016年4月21日 <br>
+         * Copyright (c) 2016 asiainfo.com <br>
+         * 
+         * @author LiangMeng
+         */
+        public static final class Status {
+            
+            private Status() {
+                
+            }
+            
+            /**
+             * 失效
+             */
+            public static final String INVALID = "0";
+            
+            /**
+             * 生效
+             */
+            public static final String EFFECTIVE = "1";
+
+            /**
+             * 待生效
+             */
+            public static final String TO_BE_EFFECTIVE = "2";
+
+        }
+
 	}
 	/**
 	 * 卡夫卡相关配置

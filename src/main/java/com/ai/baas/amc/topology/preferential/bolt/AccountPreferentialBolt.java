@@ -55,7 +55,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
     private IDshmClient client=null;
     private KafkaProxy kafkaProxy = null;
     /*初始化dao*/
-    private AmcPreferentialSV amcChargeDAO = new AmcPreferentialSV();
+    private AmcPreferentialSV amcChargeSV = new AmcPreferentialSV();
     @Override
     public void prepare(Map stormConf, TopologyContext context) {
         LOG.info("账务优惠bolt[prepare方法]...");
@@ -104,7 +104,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             String fee3 = data.get(AmcConstants.FmtFeildName.FEE3);
             String billMonth = data.get(AmcConstants.FmtFeildName.START_TIME).substring(0,6);
             /* 3.累账，将记录中的数据，增加到对应账单中(记录到内存中，不沉淀到数据库) */
-            List<AmcChargeBean> chargeListDB = amcChargeDAO.queryChargeList(data,billMonth);
+            List<AmcChargeBean> chargeListDB = amcChargeSV.queryChargeList(data,billMonth);
             /*累账后的结果放入该处*/
             List<AmcChargeBean> chargeListAfter = new ArrayList<AmcChargeBean>(); 
             /* 3.1 对fee1判断并累账到对应的科目 */
@@ -135,7 +135,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     } 
                 }
                 /*3.2.2 如果没有找到科目1对应的账单数据，则创建一个*/
-                if(beanAfter.getAcctId()==0){
+                if(beanAfter.getAcctId()==null||beanAfter.getAcctId()==0){
                     this.initChargeBean(beanAfter,data,Long.parseLong(fee2),Long.parseLong(billSubject2));
                 }
                 /*3.2.3 将结果存入处理后的list*/
@@ -152,7 +152,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     } 
                 }
                 /*3.3.2 如果没有找到科目1对应的账单数据，则创建一个*/
-                if(beanAfter.getAcctId()==0){
+                if(beanAfter.getAcctId()==null||beanAfter.getAcctId()==0){
                     this.initChargeBean(beanAfter,data,Long.parseLong(fee3),Long.parseLong(billSubject3));
                 }
                 /*3.3.3 将结果存入处理后的list*/
@@ -193,15 +193,15 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         if(refSubjectAmount<bdAmount){//
                             /*4.3.1.3 如果参考科目金额小于保底，则将计费科目金额 */
                             this.initChargeBean(amcChargeBean, data, (bdAmount-billSubjectAmount), Long.parseLong(newSubject));
-                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
+                            amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(newSubject));
-                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
+                            amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }else{
                             /*4.3.1.4 如果参考科目金额小于保底，则将计费科目金额 */
                             this.initChargeBean(amcChargeBean, data, (0), Long.parseLong(newSubject));
-                            amcChargeDAO.saveOrUpdateAmcChargeBean( amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
+                            amcChargeSV.saveOrUpdateAmcChargeBean( amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(newSubject));
-                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
+                            amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }
                     }
                     /*4.3.2 封顶*/
@@ -224,11 +224,11 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         if(refSubjectAmount > fdAmount){
                             /*4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额*/
                             this.initChargeBean(amcChargeBean, data, (fdAmount), Long.parseLong(billSubject));
-                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
+                            amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }else if(refSubjectAmount <= fdAmount){
                             /*4.3.2.4 如果参考科目金额小于或等于封顶金额，则计费金额等于计费金额*/
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(billSubject));
-                            amcChargeDAO.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
+                            amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }
                     }
                 }
@@ -279,15 +279,15 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
      * @return
      * @author LiangMeng
      */
-    private List<AmcProductInfoBean> queryProductList(String tenantId,String custId) throws BusinessException{       
+    private List<AmcProductInfoBean> queryProductList(String tenantId,String subsId) throws BusinessException{       
         Map<String,String> params = new TreeMap<String,String>();
         params.put(AmcConstants.FmtFeildName.TENANT_ID, tenantId); 
-        params.put(AmcConstants.FmtFeildName.CUST_ID, custId); 
+        params.put(AmcConstants.FmtFeildName.SUBS_ID, subsId); 
         List<Map<String, String>> results=client.list(AmcConstants.CacheConfig.BL_SUBS_COMM)
              .where(params)
              .executeQuery(cacheClient);
         if(results==null||results.size()!=1){
-            throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_GET_CACHE_DATA, "获取订购信息失败，CUST_ID:["+custId+"]");
+            throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_GET_CACHE_DATA, "获取订购信息失败，SUBS_ID:["+subsId+"]");
         }
         List<AmcProductInfoBean> sortList = new ArrayList<AmcProductInfoBean>();
         
@@ -313,7 +313,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             bean.setStatus(map.get("status"));
             bean.setTenantId(map.get("tenant_id"));
             
-            if("0".equals(bean.getStatus())){//TODO
+            if(AmcConstants.ProductInfo.Status.EFFECTIVE.equals(bean.getStatus())){
                 sortList.add(bean); 
             }
         }

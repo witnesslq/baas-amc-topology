@@ -180,10 +180,14 @@ public class AmcWriteOffSV implements Serializable{
                     amcSettleLogBean.setSettleType(0);
                     amcSettleLogBean.setStatus(0);
                     amcSettleLogBean.setTenantId(tenantId);
-                    amcSettleLogBean.setCancelSerialCode("");
                     amcSettleLogBean.setTotal(total);
                     int resultSettleLog = this.saveSettleLogBean(amcSettleLogBean,thisMonth,conn);
                     if(resultSettleLog == 0){
+                        isSuccess = false;
+                    }
+                    /*6.更新欠费总表*/
+                    int resultOw =this.updateOweInfo(tenantId, acctId, total, conn);
+                    if(resultOw == 0){
                         isSuccess = false;
                     }
                     if(isSuccess){
@@ -520,7 +524,7 @@ public class AmcWriteOffSV implements Serializable{
         int result = 0;
         try {
             StringBuffer sql = new StringBuffer();
-            sql.append(" insert into amc_settle_log_201605(serial_code,tenant_id,busi_oper_code,acct_id,");
+            sql.append(" insert into amc_settle_log_"+billMonth+"(serial_code,tenant_id,busi_oper_code,acct_id,");
             sql.append("        settle_mode,settle_type,total,status,last_status_date,cancel_serial_code,create_time)");
             sql.append("        values (");
             sql.append(amcSettleLogBean.getSerialCode());
@@ -613,6 +617,37 @@ public class AmcWriteOffSV implements Serializable{
             throw e;
         }
         
+        return result;
+    }
+    
+    /**
+     * 更新欠费总表金额
+     * @param tenantId
+     * @param acctId
+     * @param balance
+     * @param conn
+     * @return
+     * @throws Exception
+     * @author LiangMeng
+     */
+    private int updateOweInfo(String tenantId,String acctId,long balance,
+            Connection conn) throws Exception{
+        int result = 0;
+        try {
+            StringBuffer sql = new StringBuffer();
+            sql.append("update amc_owe_info");
+            sql.append(" set balance = balance-");
+            sql.append(balance);
+            sql.append(" ,confirm_time = now() where acct_id=");
+            sql.append(acctId);
+            sql.append(" and tenant_id ='");
+            sql.append(tenantId);
+            LOG.info("更新欠费总表金额sql：[" + sql + "]");
+            result = DBUtil.saveOrUpdate(sql.toString(), conn, false);
+        } catch (Exception e) {
+            LOG.error("更新欠费总表金额异常：[" + e.getMessage() + "]", e);
+            throw e;
+        }
         return result;
     }
 }
