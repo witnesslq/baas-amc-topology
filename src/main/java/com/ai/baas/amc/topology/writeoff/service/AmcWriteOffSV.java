@@ -73,9 +73,13 @@ public class AmcWriteOffSV implements Serializable {
                 Timestamp expireDate = amcFundBookBean.getExpireDate();// 生效日期
                 Long subjectId = amcFundBookBean.getSubjectId();
                 Long bookId = amcFundBookBean.getBookId();
+                long fundBookBalance = amcFundBookBean.getBalance();
                 Map<String, String> subjectMap = this.querySubject(tenantId, subjectId + "",
                         cacheClient, client);
                 String feeSubjectId = this.queryFeeSubject(tenantId, subjectId + "", conn);
+                if (fundBookBalance == 0 ) {
+                    continue;
+                }
                 if ("0".equals(subjectMap.get("can_settle_all"))) {
                     /* 二层循环，遍历可销账月份 */
                     T2: for (Map<String, Object> map : writeOffMonthList) {
@@ -98,9 +102,11 @@ public class AmcWriteOffSV implements Serializable {
                                 long chargeBalance = chargeBean.getBalance();
                                 String feeSubject = chargeBean.getSubjectId() + "";
                                 if (feeSubject.equals(feeSubjectId)) {
-                                    long fundBookBalance = amcFundBookBean.getBalance();
                                     long settleTotal = 0;
-
+                                    if (fundBookBalance == 0 || chargeBalance == 0) {
+                                        /* 3.4.1 账本余额为0，则什么都不处理 */
+                                        continue;
+                                    }
                                     /** 初始化账本变更记录 */
                                     String paySerialCode = SeqUtil
                                             .getNewId(
@@ -134,10 +140,7 @@ public class AmcWriteOffSV implements Serializable {
                                     serialBean.setPaySerialCode(paySerialCode);
 
                                     /* 3.4 判断余额是否充足 */
-                                    if (fundBookBalance == 0 || chargeBalance == 0) {
-                                        /* 3.4.1 账本余额为0，则什么都不处理 */
-                                        continue;
-                                    } else if (fundBookBalance >= chargeBalance) {
+                                    if (fundBookBalance >= chargeBalance) {
                                         detailBean.setRemark("销账金额[" + chargeBalance + "]");
                                         detailBean.setTransSummary("销账金额[" + chargeBalance + "]");
                                         detailBean.setTotalAmount(chargeBalance);
@@ -157,6 +160,13 @@ public class AmcWriteOffSV implements Serializable {
                                             isSuccess = false;
                                         }
                                     } else {
+                                        detailBean.setRemark("销账金额[" + fundBookBalance + "]");
+                                        detailBean.setTransSummary("销账金额[" + fundBookBalance + "]");
+                                        detailBean.setTotalAmount(fundBookBalance);
+
+                                        serialBean.setRemark("销账金额[" + fundBookBalance + "]");
+                                        serialBean.setTransSummary("销账金额[" + fundBookBalance + "]");
+                                        serialBean.setTotalAmount(fundBookBalance);
                                         /* 3.4.4 如果账本中月不充足，则销掉该账本的金额，将账本更新为0，账单未销账金额为（账单金额-账本金额） */
                                         int resultFundBook = this.deductFundBook(detailBean,
                                                 serialBean, tenantId, bookId, fundBookBalance,
@@ -211,8 +221,12 @@ public class AmcWriteOffSV implements Serializable {
                 Timestamp expireDate = amcFundBookBean.getExpireDate();// 生效日期
                 Long subjectId = amcFundBookBean.getSubjectId();
                 Long bookId = amcFundBookBean.getBookId();
+                long fundBookBalance = amcFundBookBean.getBalance();
                 Map<String, String> subjectMap = this.querySubject(tenantId, subjectId + "",
                         cacheClient, client);
+                if (fundBookBalance == 0 ) {
+                    continue;
+                }
                 if ("1".equals(subjectMap.get("can_settle_all"))) {
                     /* 二层循环，遍历可销账月份 */
                     T2: for (Map<String, Object> map : writeOffMonthList) {
@@ -233,9 +247,11 @@ public class AmcWriteOffSV implements Serializable {
                             for (AmcChargeBean chargeBean : chargeList) {
                                 long chargeBalance = chargeBean.getBalance();
                                 String feeSubject = chargeBean.getSubjectId() + "";
-                                long fundBookBalance = amcFundBookBean.getBalance();
                                 long settleTotal = 0;
-
+                                if (fundBookBalance == 0 || chargeBalance == 0) {
+                                    /* 3.4.1 账本余额为0，则什么都不处理 */
+                                    continue;
+                                }
                                 /** 初始化账本变更记录 */
                                 String paySerialCode = SeqUtil.getNewId(
                                         AmcConstants.SeqName.AMC_FUND_SERIAL$PAY_SERIAL_CODE$SEQ,
@@ -267,10 +283,7 @@ public class AmcWriteOffSV implements Serializable {
                                 serialBean.setPaySerialCode(paySerialCode);
 
                                 /* 3.4 判断余额是否充足 */
-                                if (fundBookBalance == 0 || chargeBalance == 0) {
-                                    /* 3.4.1 账本余额为0，则什么都不处理 */
-                                    continue;
-                                } else if (fundBookBalance >= chargeBalance) {
+                                if (fundBookBalance >= chargeBalance) {
                                     detailBean.setRemark("销账金额[" + chargeBalance + "]");
                                     detailBean.setTransSummary("销账金额[" + chargeBalance + "]");
                                     detailBean.setTotalAmount(chargeBalance);
@@ -289,7 +302,15 @@ public class AmcWriteOffSV implements Serializable {
                                     if (resultFundBook == 0 || resultCharge == 0) {
                                         isSuccess = false;
                                     }
+                                    fundBookBalance = fundBookBalance - chargeBalance;
                                 } else {
+                                    detailBean.setRemark("销账金额[" + fundBookBalance + "]");
+                                    detailBean.setTransSummary("销账金额[" + fundBookBalance + "]");
+                                    detailBean.setTotalAmount(fundBookBalance);
+
+                                    serialBean.setRemark("销账金额[" + fundBookBalance + "]");
+                                    serialBean.setTransSummary("销账金额[" + fundBookBalance + "]");
+                                    serialBean.setTotalAmount(fundBookBalance);
                                     /* 3.4.4 如果账本中月不充足，则销掉该账本的金额，将账本更新为0，账单未销账金额为（账单金额-账本金额） */
                                     int resultFundBook = this.deductFundBook(detailBean,
                                             serialBean, tenantId, bookId, fundBookBalance,
@@ -301,6 +322,7 @@ public class AmcWriteOffSV implements Serializable {
                                     if (resultFundBook == 0 || resultCharge == 0) {
                                         isSuccess = false;
                                     }
+                                    fundBookBalance = 0;
                                 }
                                 /* 4.记录销账明细 */
 
