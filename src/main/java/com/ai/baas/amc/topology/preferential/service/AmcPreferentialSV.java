@@ -18,6 +18,7 @@ import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.jdbc.JdbcTemplate;
 import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.base.exception.SystemException;
+import com.ai.opt.sdk.sequence.util.SeqUtil;
 
 /**
  * 账务优惠SV
@@ -108,18 +109,20 @@ public class AmcPreferentialSV implements Serializable{
                 StringBuffer sqlCharge = new StringBuffer();           
                 sqlCharge.append(" insert into amc_charge_");
                 sqlCharge.append(billMonth);
-                sqlCharge.append(" (acct_id,subs_id,service_id,subject_id,total_amount, ");
+                sqlCharge.append(" (charge_seq,acct_id,subs_id,service_id,subject_id,total_amount, ");
                 sqlCharge.append("         adjust_afterwards,disc_total_amount,balance,pay_status, ");
                 sqlCharge.append("         last_pay_date,cust_id,cust_type,tenant_id ) ");
                 sqlCharge.append("         values(");
+                sqlCharge.append(amcChargeBean.getChargeSeq());
+                sqlCharge.append(",");
                 sqlCharge.append(amcChargeBean.getAcctId());
                 sqlCharge.append(",");
                 sqlCharge.append(amcChargeBean.getSubsId());
-                sqlCharge.append(",");
+                sqlCharge.append(",'");
                 sqlCharge.append(amcChargeBean.getServiceId());
-                sqlCharge.append(",");
+                sqlCharge.append("','");
                 sqlCharge.append(amcChargeBean.getSubjectId());
-                sqlCharge.append(",");
+                sqlCharge.append("',");
                 sqlCharge.append(amcChargeBean.getTotalAmount());
                 sqlCharge.append(",");
                 sqlCharge.append(amcChargeBean.getAdjustAfterwards());
@@ -180,12 +183,15 @@ public class AmcPreferentialSV implements Serializable{
         AmcInvoiceBean amcInvoiceBean = this.queryInvoice(amcChargeBean, conn, billMonth);
         if(amcInvoiceBean==null||amcInvoiceBean.getAcctId()==0){
            /*1.如果没有账单信息，则更新*/
+
+            String invoiceSeq = SeqUtil.getNewId(
+                    AmcConstants.SeqName.AMC_INVOICE$SERIAL_CODE$SEQ, 10);
             amcInvoiceBean = this.initAmcInvoiceBean(amcChargeBean);
             StringBuffer insertSql = new StringBuffer();
             insertSql.append("insert into amc_invoice_");
             insertSql.append(billMonth);
             insertSql.append(" ");
-            insertSql.append(" (ACCT_ID, ");
+            insertSql.append(" (INVOICE_SEQ,ACCT_ID, ");
             insertSql.append("  ADJUST_AFTERWARDS, ");
             insertSql.append("  BALANCE, ");
             insertSql.append("  CUST_ID, ");
@@ -200,6 +206,9 @@ public class AmcPreferentialSV implements Serializable{
             insertSql.append("  TOTAL_AMOUNT) ");
             insertSql.append("values ");
             insertSql.append("  ('");
+            insertSql.append(invoiceSeq);
+            insertSql.append("', ");
+            insertSql.append("  '");
             insertSql.append(amcInvoiceBean.getAcctId());
             insertSql.append("', ");
             insertSql.append("   '");

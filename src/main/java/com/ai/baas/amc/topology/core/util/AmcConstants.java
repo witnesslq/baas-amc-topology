@@ -106,11 +106,11 @@ public class AmcConstants {
         //优惠类型
         public static final String CALC_TYPE = "calc_type";
         //新科目ID用于保底
-        public static final String NEW_SUBJECT = "new_subject";
+        public static final String NEW_SUBJECT = "new_subject_id";
         //账单科目
-        public static final String BILL_SUBJECT = "bill_subject";
+        public static final String BILL_SUBJECT = "bill_subject_id";
         //参考科目
-        public static final String REF_SUBJECT = "ref_subject";
+        public static final String REF_SUBJECT = "ref_subject_id";
         
         
 
@@ -230,6 +230,10 @@ public class AmcConstants {
 	 * @author LiangMeng
 	 */
 	public static class SeqName{
+
+        public static final String AMC_CHARGE$SERIAL_CODE$SEQ = "AMC_CHARGE$SERIAL_CODE$SEQ";
+        
+        public static final String AMC_INVOICE$SERIAL_CODE$SEQ = "AMC_INVOICE$SERIAL_CODE$SEQ";
         
         public static final String AMC_SETTLE_LOG$SERIAL_CODE$SEQ = "AMC_SETTLE_LOG$SERIAL_CODE$SEQ";
         

@@ -22,6 +22,7 @@ import backtype.storm.tuple.Tuple;
 
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
+import com.ai.baas.amc.topology.core.util.DSUtil;
 import com.ai.baas.amc.topology.core.util.KafkaProxy;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.preferential.bean.AmcProductInfoBean;
@@ -35,6 +36,7 @@ import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.message.MappingRule;
 import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.base.exception.BusinessException;
+import com.ai.opt.sdk.sequence.util.SeqUtil;
 import com.ai.paas.ipaas.mcs.interfaces.ICacheClient;
 
 /**
@@ -76,6 +78,9 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
         }
         /*4.初始化kafka*/
         kafkaProxy = KafkaProxy.getInstance(stormConf);
+        
+        /* 5.初始化序列数据源*/
+        DSUtil.initSeqDS(stormConf);
     }
 
     @Override
@@ -172,7 +177,11 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     String calcType = pruductDetailMap.get(AmcConstants.ProductInfo.CALC_TYPE);
                     String newSubject = pruductDetailMap.get(AmcConstants.ProductInfo.NEW_SUBJECT);
                     String billSubject = pruductDetailMap.get(AmcConstants.ProductInfo.BILL_SUBJECT);
+                    List<Map<String,String>> billSubjectList = this.queryProductExtList(tenantId, productId,billSubject);
+                    billSubject = billSubjectList.get(0).get("ext_value");
                     String refSubject = pruductDetailMap.get(AmcConstants.ProductInfo.REF_SUBJECT);
+                    List<Map<String,String>> refSubjectList = this.queryProductExtList(tenantId, productId,refSubject);
+                    refSubject = refSubjectList.get(0).get("ext_value");
                     /*4.3.1 保底*/
                     if(AmcConstants.ProductInfo.CALC_TYPE_BD.equals(calcType)){
                         long billSubjectAmount = 0;
@@ -188,7 +197,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         }
                         /*4.3.1.2 获取该产品保底金额*/
                         List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId,AmcConstants.ProductInfo.BD_AMOUNT);
-                        long bdAmount = Long.parseLong(extList.get(0).get(AmcConstants.ProductInfo.BD_AMOUNT));
+                        long bdAmount = Long.parseLong(extList.get(0).get("ext_value"));
                         AmcChargeBean amcChargeBean = new AmcChargeBean();
                         if(refSubjectAmount<bdAmount){//
                             /*4.3.1.3 如果参考科目金额小于保底，则将计费科目金额 */
@@ -235,7 +244,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             }
                         
             /* 6.发送信控消息 */
-            kafkaProxy.sendMessage(inputData);
+            //kafkaProxy.sendMessage(inputData);
             
         }catch (BusinessException e) {
             /*处理 异常*/
@@ -286,7 +295,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
         List<Map<String, String>> results=client.list(AmcConstants.CacheConfig.BL_SUBS_COMM)
              .where(params)
              .executeQuery(cacheClient);
-        if(results==null||results.size()!=1){
+        if(results==null){
             throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_GET_CACHE_DATA, "获取订购信息失败，SUBS_ID:["+subsId+"]");
         }
         List<AmcProductInfoBean> sortList = new ArrayList<AmcProductInfoBean>();
@@ -364,6 +373,12 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
      * @author LiangMeng
      */
     private void initChargeBean(AmcChargeBean amcChargeBean,Map<String,String> data,long fee,long subjectId){
+        if(amcChargeBean.getChargeSeq()==null||amcChargeBean.getChargeSeq()==0){
+
+            String chargeSeq = SeqUtil.getNewId(
+                    AmcConstants.SeqName.AMC_CHARGE$SERIAL_CODE$SEQ, 10);
+            amcChargeBean.setChargeSeq(Long.parseLong(chargeSeq));
+        }
         amcChargeBean.setTenantId(data.get(AmcConstants.FmtFeildName.TENANT_ID));
         amcChargeBean.setAcctId(Long.parseLong(data.get(AmcConstants.FmtFeildName.ACCT_ID)));
         amcChargeBean.setBalance(fee);
