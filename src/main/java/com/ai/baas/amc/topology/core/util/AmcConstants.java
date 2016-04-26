@@ -46,6 +46,13 @@ public class AmcConstants {
         public static final String FEE3 = "fee3";
         /*详单科目*/
         public static final String SUBJECT3 = "subject3";
+        
+
+        /*账期*/
+        public static final String BILL_MONTH = "bill_month";
+
+        /*开始时间*/
+        public static final String ARRIVE_TIME = "arrive_time";
     }
     /**
      * bolt名称配置

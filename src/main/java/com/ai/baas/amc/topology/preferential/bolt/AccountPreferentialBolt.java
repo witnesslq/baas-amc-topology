@@ -105,9 +105,12 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             String billSubject3 = this.queryBillSubject(tenantId,drSubject3);
 
             String fee1 = data.get(AmcConstants.FmtFeildName.FEE1);
+            fee1 = (Long.parseLong(fee1)/1000)+"";
             String fee2 = data.get(AmcConstants.FmtFeildName.FEE2);
+            fee2 = (Long.parseLong(fee2)/1000)+"";
             String fee3 = data.get(AmcConstants.FmtFeildName.FEE3);
-            String billMonth = data.get(AmcConstants.FmtFeildName.START_TIME).substring(0,6);
+            fee3 = (Long.parseLong(fee3)/1000)+"";
+            String billMonth = data.get(AmcConstants.FmtFeildName.BILL_MONTH);
             /* 3.累账，将记录中的数据，增加到对应账单中(记录到内存中，不沉淀到数据库) */
             List<AmcChargeBean> chargeListDB = amcChargeSV.queryChargeList(data,billMonth);
             /*累账后的结果放入该处*/
