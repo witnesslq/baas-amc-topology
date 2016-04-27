@@ -155,7 +155,7 @@ public class AmcWriteOffSV implements Serializable {
                                         /* 3.4.3 如果账本中月充足，则销掉该账单的金额，将账本金额为（账本金额-账单金额），账单未销账金额更新为0 */
                                         int resultFundBook = this.deductFundBook(detailBean,
                                                 serialBean, tenantId, bookId, chargeBalance,
-                                                billMonth, conn);
+                                                thisMonth, conn);
                                         settleTotal = chargeBalance;
                                         total += chargeBalance;
                                         int resultCharge = this.updataChargeBalance(tenantId,
@@ -174,7 +174,7 @@ public class AmcWriteOffSV implements Serializable {
                                         /* 3.4.4 如果账本中月不充足，则销掉该账本的金额，将账本更新为0，账单未销账金额为（账单金额-账本金额） */
                                         int resultFundBook = this.deductFundBook(detailBean,
                                                 serialBean, tenantId, bookId, fundBookBalance,
-                                                billMonth, conn);
+                                                thisMonth, conn);
                                         settleTotal = fundBookBalance;
                                         total += fundBookBalance;
                                         writeOffMonth = billMonth;
@@ -298,7 +298,7 @@ public class AmcWriteOffSV implements Serializable {
                                     serialBean.setTotalAmount(chargeBalance);
                                     /* 3.4.3 如果账本中月充足，则销掉该账单的金额，将账本金额为（账本金额-账单金额），账单未销账金额更新为0 */
                                     int resultFundBook = this.deductFundBook(detailBean,
-                                            serialBean, tenantId, bookId, chargeBalance, billMonth,
+                                            serialBean, tenantId, bookId, chargeBalance, thisMonth,
                                             conn);
                                     settleTotal = chargeBalance;
                                     total += chargeBalance;
@@ -319,7 +319,7 @@ public class AmcWriteOffSV implements Serializable {
                                     /* 3.4.4 如果账本中月不充足，则销掉该账本的金额，将账本更新为0，账单未销账金额为（账单金额-账本金额） */
                                     int resultFundBook = this.deductFundBook(detailBean,
                                             serialBean, tenantId, bookId, fundBookBalance,
-                                            billMonth, conn);
+                                            thisMonth, conn);
                                     settleTotal = fundBookBalance;
                                     total += fundBookBalance;
                                     writeOffMonth = billMonth;
