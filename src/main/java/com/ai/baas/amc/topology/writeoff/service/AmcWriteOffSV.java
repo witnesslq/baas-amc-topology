@@ -322,6 +322,7 @@ public class AmcWriteOffSV implements Serializable {
                                             billMonth, conn);
                                     settleTotal = fundBookBalance;
                                     total += fundBookBalance;
+                                    writeOffMonth = billMonth;
                                     int resultCharge = this.updataChargeBalance(tenantId,
                                             billMonth, feeSubject, acctId, settleTotal, conn);
                                     if (resultFundBook == 0 || resultCharge == 0) {
