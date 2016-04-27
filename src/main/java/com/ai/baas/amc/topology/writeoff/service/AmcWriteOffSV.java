@@ -96,7 +96,7 @@ public class AmcWriteOffSV implements Serializable {
                         /* 账本失效，则不能使用该账本 */
                         if (billMonthInt < effectMonth || effectMonth > expireMonth) {
                             LOG.info("账本[" + bookId + "]不可销["+billMonthInt+"]账期的账");
-                            break T2;
+                            continue T2;
                         } else {
                             LOG.info("账本[" + bookId + "]可销["+billMonthInt+"]账期的账");
                             /* 查询账单列表 */
@@ -244,7 +244,7 @@ public class AmcWriteOffSV implements Serializable {
                         /* 账本失效，则不能使用该账本 */
                         if (billMonthInt < effectMonth || effectMonth > expireMonth) {
                             LOG.info("账本[" + bookId + "]已失效");
-                            break T2;
+                            continue T2;
                         } else {
                             /* 查询账单列表 */
                             List<AmcChargeBean> chargeList = this.queryChargeList(tenantId, acctId,
@@ -921,8 +921,9 @@ public class AmcWriteOffSV implements Serializable {
             String month = (String)writeOffMonthList.get(0).get("yyyyMM");
             for(Map<String, Object> map : writeOffMonthList){
                 long balance = this.queryChargeBalance(tenantId, acctId, (String)map.get("yyyyMM"), conn);
+                LOG.info("获取["+map.get("yyyyMM")+"]月账单欠费金额为["+balance+"]");
+                month = (String)map.get("yyyyMM");
                 if(balance>0){
-                    month = (String)map.get("yyyyMM");
                     break;
                 }
             }
