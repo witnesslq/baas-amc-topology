@@ -189,7 +189,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     if(AmcConstants.ProductInfo.CALC_TYPE_BD.equals(calcType)){
                         long billSubjectAmount = 0;
                         long refSubjectAmount = 0;
-                        /*4.3.1.1 获取参考科目，计费科目的金额*/
+                        /*4.3.1.1 获取参考科目，优惠科目的金额*/
                         for(AmcChargeBean amcChargeBean: chargeListAfter){
                             if(amcChargeBean.getSubjectId().equals(billSubject)){
                                 billSubjectAmount=amcChargeBean.getTotalAmount(); 
@@ -220,7 +220,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     if(AmcConstants.ProductInfo.CALC_TYPE_FD.equals(calcType)){
                         long billSubjectAmount = 0;
                         long refSubjectAmount = 0;
-                        /*4.3.2.1 获取参考科目，计费科目的金额*/
+                        /*4.3.2.1 获取参考科目，优惠科目的金额*/
                         for(AmcChargeBean amcChargeBean: chargeListAfter){
                             if(amcChargeBean.getSubjectId().equals(billSubject)){
                                 billSubjectAmount=amcChargeBean.getTotalAmount(); 
@@ -242,6 +242,37 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(billSubject));
                             amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
                         }
+                    }
+                    /*限时折扣*/
+                    if(AmcConstants.ProductInfo.CALC_TYPE_XSZK.equals(calcType)){                        
+                        long billSubjectAmount = 0;
+                        /*4.3.3.1 优惠科目的金额*/
+                        for(AmcChargeBean amcChargeBean: chargeListAfter){
+                            if(amcChargeBean.getSubjectId().equals(billSubject)){
+                                billSubjectAmount=amcChargeBean.getTotalAmount(); 
+                            }
+                        }
+                        /*4.3.2.2 获取该产品封顶金额*/
+                        List<Map<String,String>> zklList = this.queryProductExtList(tenantId, productId, AmcConstants.ProductInfo.XSZK_ZKL);
+                        long zkl = Long.parseLong(zklList.get(0).get(AmcConstants.ProductInfo.EXT_VALUE));    
+                        AmcChargeBean amcChargeBean = new AmcChargeBean();  
+                        List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId, AmcConstants.ProductInfo.XSZK_ZKL);
+                        long ss = Long.parseLong(extList.get(0).get(AmcConstants.ProductInfo.EXT_VALUE));   
+                        
+                        
+                        
+                        
+                        
+                        
+//                        if(refSubjectAmount > fdAmount){
+//                            /*4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额*/
+//                            this.initChargeBean(amcChargeBean, data, (fdAmount), Long.parseLong(billSubject));
+//                            amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
+//                        }else if(refSubjectAmount <= fdAmount){
+//                            /*4.3.2.4 如果参考科目金额小于或等于封顶金额，则计费金额等于计费金额*/
+//                            this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(billSubject));
+//                            amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
+//                        }
                     }
                 }
             }

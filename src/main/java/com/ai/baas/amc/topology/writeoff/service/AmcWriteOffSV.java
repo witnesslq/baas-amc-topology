@@ -67,6 +67,10 @@ public class AmcWriteOffSV implements Serializable {
                     AmcConstants.SeqName.AMC_SETTLE_LOG$SERIAL_CODE$SEQ, 10);
 
             long total = 0;
+            if(writeOffMonthList==null||writeOffMonthList.size()==0){
+                throw new BusinessException("999999", "未获取到最后未销账月份");
+            }
+            String writeOffMonth  = (String)writeOffMonthList.get(0).get("yyyyMM");
             /* 3.一层寻缘遍历账本列表，先处理专款 */
             for (AmcFundBookBean amcFundBookBean : fundBookList) {
                 Timestamp effectDate = amcFundBookBean.getEffectDate();// 失效日期
@@ -173,6 +177,7 @@ public class AmcWriteOffSV implements Serializable {
                                                 billMonth, conn);
                                         settleTotal = fundBookBalance;
                                         total += fundBookBalance;
+                                        writeOffMonth = billMonth;
                                         int resultCharge = this.updataChargeBalance(tenantId,
                                                 billMonth, feeSubject, acctId, settleTotal, conn);
                                         if (resultFundBook == 0 || resultCharge == 0) {
@@ -376,7 +381,7 @@ public class AmcWriteOffSV implements Serializable {
                     isSuccess = false;
                 }
                 /* 6.更新欠费总表 */
-                int resultOw = this.updateOweInfo(tenantId, acctId, total, conn);
+                int resultOw = this.updateOweInfo(tenantId, acctId, total,writeOffMonth, conn);
                 if (resultOw == 0) {
                     isSuccess = false;
                 }
@@ -850,7 +855,7 @@ public class AmcWriteOffSV implements Serializable {
      * @throws Exception
      * @author LiangMeng
      */
-    private int updateOweInfo(String tenantId, String acctId, long balance, Connection conn)
+    private int updateOweInfo(String tenantId, String acctId, long balance,String billMonth, Connection conn)
             throws Exception {
         int result = 0;
         try {
@@ -858,7 +863,9 @@ public class AmcWriteOffSV implements Serializable {
             sql.append("update amc_owe_info");
             sql.append(" set balance = balance-");
             sql.append(balance);
-            sql.append(" ,confirm_time = now() where acct_id=");
+            sql.append(" , month = '");
+            sql.append(billMonth);
+            sql.append("' ,confirm_time = now() where acct_id=");
             sql.append(acctId);
             sql.append(" and tenant_id ='");
             sql.append(tenantId);

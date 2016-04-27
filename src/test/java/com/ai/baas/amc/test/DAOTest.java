@@ -82,7 +82,7 @@ public class DAOTest {
         DSUtil.initSeqDS(stormConf);
         AmcWriteOffSV sv = new AmcWriteOffSV();
         try {
-            sv.writeOffCore("17", "VIV-BYD", JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),cacheClient,client);
+            sv.writeOffCore("48", "VIV-BYD", JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),cacheClient,client);
         } catch (Exception e) {
             e.printStackTrace();
         }
