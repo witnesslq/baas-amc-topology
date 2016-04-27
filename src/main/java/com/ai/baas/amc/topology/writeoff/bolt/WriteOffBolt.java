@@ -1,6 +1,7 @@
 package com.ai.baas.amc.topology.writeoff.bolt;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -85,6 +86,10 @@ public class WriteOffBolt extends BaseBasicBolt {
             String acctId = data.get(AmcConstants.FmtFeildName.ACCT_ID);
             /* 2. 执行销账*/
             boolean isSuccess = amcWriteOffSV.writeOffCore(acctId, tenantId, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), cacheClient, client);
+
+            List<Map<String, Object>> writeOffMonthList = amcWriteOffSV.queryWriteOffMonths(tenantId,
+                    acctId, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+            int updateMonth = amcWriteOffSV.updateOweInfoMonth(tenantId, acctId, writeOffMonthList, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
             if(!isSuccess){
                throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_OWE, "销账处理失败，tenantId:["+tenantId+"],acct_id:["+acctId+"]");
             }

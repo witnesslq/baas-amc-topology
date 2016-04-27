@@ -442,7 +442,7 @@ public class AmcWriteOffSV implements Serializable {
      * @return
      * @author LiangMeng
      */
-    private List<Map<String, Object>> queryWriteOffMonths(String tenantId, String acctId,
+    public List<Map<String, Object>> queryWriteOffMonths(String tenantId, String acctId,
             Connection conn) {
         List<Map<String, Object>> list = null;
         StringBuffer sql = new StringBuffer();
@@ -864,9 +864,7 @@ public class AmcWriteOffSV implements Serializable {
             sql.append("update amc_owe_info");
             sql.append(" set balance = balance-");
             sql.append(balance);
-            sql.append(" , month = '");
-            sql.append(billMonth);
-            sql.append("' ,confirm_time = now() where acct_id=");
+            sql.append(" ,confirm_time = now() where acct_id=");
             sql.append(acctId);
             sql.append(" and tenant_id ='");
             sql.append(tenantId);
@@ -879,7 +877,6 @@ public class AmcWriteOffSV implements Serializable {
         }
         return result;
     }
-
     /**
      * 
      * @param tenantId
@@ -903,5 +900,93 @@ public class AmcWriteOffSV implements Serializable {
         }
 
         return results.get(0);
+    }
+    /**
+     * 更新未销账账期
+     * @param tenantId
+     * @param acctId
+     * @param balance
+     * @param writeOffMonthList
+     * @param conn
+     * @return
+     * @throws Exception
+     * @author LiangMeng
+     */
+    public int updateOweInfoMonth(String tenantId, String acctId, List<Map<String, Object>> writeOffMonthList, Connection conn)
+            throws Exception {
+        int result = 0;
+        try {
+            conn.setAutoCommit(false);
+            String firstMonth = (String)writeOffMonthList.get(0).get("yyyyMM");
+            String month = (String)writeOffMonthList.get(0).get("yyyyMM");
+            for(Map<String, Object> map : writeOffMonthList){
+                long balance = this.queryChargeBalance(tenantId, acctId, (String)map.get("yyyyMM"), conn);
+                if(balance>0){
+                    month = (String)map.get("yyyyMM");
+                    break;
+                }
+            }
+            if(Long.parseLong(month)>Long.parseLong(firstMonth)){
+                StringBuffer sql = new StringBuffer();
+                sql.append("update amc_owe_info");
+                sql.append(" set month = '");
+                sql.append(month);
+                sql.append("' where acct_id=");
+                sql.append(acctId);
+                sql.append(" and tenant_id ='");
+                sql.append(tenantId);
+                sql.append("'");
+                LOG.info("更新欠费总表最后未销账账期sql：[" + sql + "]");
+                result = DBUtil.saveOrUpdate(sql.toString(), conn, false);
+            }else{
+                LOG.info("最后未销账月无需更新");
+            }
+            
+            if(result>0){
+                conn.commit();
+            }else{
+                conn.rollback();
+            }
+        } catch (Exception e) {
+            LOG.error("更新欠费总表最后未销账账期：[" + e.getMessage() + "]", e);
+            throw e;
+        }
+        return result;
+    }
+    /**
+     * 查询账单欠费金额
+     * @param tenantId
+     * @param acctId
+     * @param billMonth
+     * @param conn
+     * @return
+     * @author LiangMeng
+     */
+    private long queryChargeBalance(String tenantId, String acctId, String billMonth,
+            Connection conn) {
+        StringBuffer sql = new StringBuffer();
+        sql.append(" select IFNULL(sum(balance),0) as balance");
+        sql.append(" from amc_charge_" + billMonth + " ");
+        sql.append(" where acct_id=" + acctId + " ");
+        sql.append(" and tenant_id ='");
+        sql.append(tenantId);
+        sql.append("'");
+        LOG.info("账单查询语句：[" + sql + "]");
+        List<AmcChargeBean> list = null;
+        try {
+            if (conn != null) {
+                list = JdbcTemplate.query(sql.toString(), conn, new BeanListHandler<AmcChargeBean>(
+                        AmcChargeBean.class));
+            } else {
+                throw new SystemException("999999", "未取得数据库的连接");
+            }
+        } catch (Exception e) {
+            LOG.error("账单查询报错", e);
+        }
+        long balance = 0;
+        if(list!=null){
+            balance = list.get(0).getBalance();
+        }
+        return balance;
     }
 }
