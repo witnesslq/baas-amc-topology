@@ -181,28 +181,25 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     String newSubject = pruductDetailMap.get(AmcConstants.ProductInfo.NEW_SUBJECT);
                     String billSubject = pruductDetailMap.get(AmcConstants.ProductInfo.BILL_SUBJECT);
                     List<Map<String,String>> billSubjectList = this.queryProductExtList(tenantId, productId,billSubject);
-                    billSubject = billSubjectList.get(0).get("ext_value");
                     String refSubject = pruductDetailMap.get(AmcConstants.ProductInfo.REF_SUBJECT);
                     List<Map<String,String>> refSubjectList = this.queryProductExtList(tenantId, productId,refSubject);
-                    refSubject = refSubjectList.get(0).get("ext_value");
                     /*4.3.1 保底*/
                     if(AmcConstants.ProductInfo.CALC_TYPE_BD.equals(calcType)){
                         long billSubjectAmount = 0;
-                        long refSubjectAmount = 0;
                         /*4.3.1.1 获取参考科目，优惠科目的金额*/
-                        for(AmcChargeBean amcChargeBean: chargeListAfter){
-                            if(amcChargeBean.getSubjectId().equals(billSubject)){
-                                billSubjectAmount=amcChargeBean.getTotalAmount(); 
-                            }
-                            if(amcChargeBean.getSubjectId().equals(refSubject)){
-                                refSubjectAmount=amcChargeBean.getTotalAmount(); 
+                        for(Map<String,String> map :billSubjectList){
+                            String billSubjects =  map.get("ext_value");
+                            for(AmcChargeBean amcChargeBean: chargeListAfter){
+                                if(amcChargeBean.getSubjectId().equals(billSubjects)){
+                                    billSubjectAmount+=amcChargeBean.getTotalAmount(); 
+                                }
                             }
                         }
                         /*4.3.1.2 获取该产品保底金额*/
                         List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId,AmcConstants.ProductInfo.BD_AMOUNT);
                         long bdAmount = Long.parseLong(extList.get(0).get("ext_value"));
                         AmcChargeBean amcChargeBean = new AmcChargeBean();
-                        if(refSubjectAmount<bdAmount){//
+                        if(billSubjectAmount<bdAmount){//
                             /*4.3.1.3 如果参考科目金额小于保底，则将计费科目金额 */
                             this.initChargeBean(amcChargeBean, data, (bdAmount-billSubjectAmount), Long.parseLong(newSubject));
                             amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
@@ -219,25 +216,24 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     /*4.3.2 封顶*/
                     if(AmcConstants.ProductInfo.CALC_TYPE_FD.equals(calcType)){
                         long billSubjectAmount = 0;
-                        long refSubjectAmount = 0;
                         /*4.3.2.1 获取参考科目，优惠科目的金额*/
-                        for(AmcChargeBean amcChargeBean: chargeListAfter){
-                            if(amcChargeBean.getSubjectId().equals(billSubject)){
-                                billSubjectAmount=amcChargeBean.getTotalAmount(); 
-                            }
-                            if(amcChargeBean.getSubjectId().equals(refSubject)){
-                                refSubjectAmount=amcChargeBean.getTotalAmount(); 
+                        for(Map<String,String> map :billSubjectList){
+                            String billSubjects =  map.get("ext_value");
+                            for(AmcChargeBean amcChargeBean: chargeListAfter){
+                                if(amcChargeBean.getSubjectId().equals(billSubjects)){
+                                    billSubjectAmount+=amcChargeBean.getTotalAmount(); 
+                                }
                             }
                         }
                         /*4.3.2.2 获取该产品封顶金额*/
                         List<Map<String,String>> extList = this.queryProductExtList(tenantId, productId, AmcConstants.ProductInfo.FD_AMOUNT);
                         long fdAmount = Long.parseLong(extList.get(0).get(AmcConstants.ProductInfo.EXT_VALUE));    
                         AmcChargeBean amcChargeBean = new AmcChargeBean();                   
-                        if(refSubjectAmount > fdAmount){
+                        if(billSubjectAmount > fdAmount){
                             /*4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额*/
                             this.initChargeBean(amcChargeBean, data, (fdAmount), Long.parseLong(billSubject));
                             amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
-                        }else if(refSubjectAmount <= fdAmount){
+                        }else if(billSubjectAmount <= fdAmount){
                             /*4.3.2.4 如果参考科目金额小于或等于封顶金额，则计费金额等于计费金额*/
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount), Long.parseLong(billSubject));
                             amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),billMonth);
