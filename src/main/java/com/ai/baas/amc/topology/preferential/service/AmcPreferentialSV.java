@@ -146,7 +146,7 @@ public class AmcPreferentialSV implements Serializable{
             }else{
                 /*3.如果已经存在该科目账单，则更新*/
                 StringBuffer sqlUpdate = new StringBuffer();
-                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = (total_amount+"+amcChargeBean.getTotalAmount()+") ");
+                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = (total_amount+"+amcChargeBean.getTotalAmount()+") ,balance = (balance+"+amcChargeBean.getBalance()+") ");
                 sqlUpdate.append(" where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
                         " and cust_id="+amcChargeBean.getCustId()+" and subject_id="+amcChargeBean.getSubjectId()+" ");
                 LOG.info("账单更新语句：["+sqlUpdate+"]");
@@ -227,7 +227,7 @@ public class AmcPreferentialSV implements Serializable{
             }else{
                 /*3.如果已经存在该科目账单，则更新*/
                 StringBuffer sqlUpdate = new StringBuffer();
-                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = "+amcChargeBean.getTotalAmount()+" ");
+                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = "+amcChargeBean.getTotalAmount()+" ,balance = "+amcChargeBean.getBalance()+" ");
                 sqlUpdate.append(" where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
                         " and cust_id="+amcChargeBean.getCustId()+" and subject_id="+amcChargeBean.getSubjectId()+" ");
                 LOG.info("账单更新语句：["+sqlUpdate+"]");
@@ -259,7 +259,7 @@ public class AmcPreferentialSV implements Serializable{
      * @return
      * @author LiangMeng
      */
-    private int reBalanceInvoice(AmcChargeBean amcChargeBean,Connection conn,String billMonth) throws Exception{
+    public int reBalanceInvoice(AmcChargeBean amcChargeBean,Connection conn,String billMonth) throws Exception{
         int result = 0;
         AmcInvoiceBean amcInvoiceBean = this.queryInvoice(amcChargeBean, conn, billMonth);
         if(amcInvoiceBean==null||amcInvoiceBean.getAcctId()==0){
@@ -331,13 +331,20 @@ public class AmcPreferentialSV implements Serializable{
         }else{
 
             StringBuffer sqlUpdate = new StringBuffer();
-            sqlUpdate.append(" update amc_invoice_"+billMonth+" set total_amount = (select sun(total_amount) from amc_charge_"+billMonth+") where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
-                    " and cust_id="+amcChargeBean.getCustId()+" ");
+            sqlUpdate.append(" update amc_invoice_"+billMonth+" set balance = (select sum(balance) from amc_charge_"+billMonth+" where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
+                    " and cust_id="+amcChargeBean.getCustId()+") ,total_amount = (select sum(total_amount) from amc_charge_"+billMonth+" where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
+                    " and cust_id="+amcChargeBean.getCustId()+") ");
             sqlUpdate.append(" where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
                     " and cust_id="+amcChargeBean.getCustId()+" ");
             LOG.info("账单总表更新语句：["+sqlUpdate+"]");
             result  = DBUtil.saveOrUpdate(sqlUpdate.toString(), conn,false);
         }
+        StringBuffer sqlUpdate = new StringBuffer();
+        sqlUpdate.append(" update amc_owe_info  set balance = (balance+"+amcChargeBean.getBalance()+") ");
+        sqlUpdate.append(" where  acct_id="+amcChargeBean.getAcctId()+
+                " and cust_id="+amcChargeBean.getCustId()+" ");
+        LOG.info("欠费总表更新语句：["+sqlUpdate+"]");
+        result  = DBUtil.saveOrUpdate(sqlUpdate.toString(), conn,false);
         return result;
     }
     private AmcInvoiceBean queryInvoice(AmcChargeBean bean,Connection conn,String billMonth){
