@@ -15,6 +15,7 @@ import com.ai.baas.amc.topology.core.util.AmcUtil;
 import com.ai.baas.amc.topology.core.util.DBUtil;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.preferential.bean.AmcInvoiceBean;
+import com.ai.baas.storm.exception.BusinessException;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.jdbc.JdbcTemplate;
 import com.ai.baas.storm.util.BaseConstants;
@@ -147,7 +148,7 @@ public class AmcPreferentialSV implements Serializable{
             }else{
                 /*3.如果已经存在该科目账单，则更新*/
                 StringBuffer sqlUpdate = new StringBuffer();
-                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = (total_amount+"+amcChargeBean.getTotalAmount()+") ,balance = (balance+"+amcChargeBean.getBalance()+") ");
+                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = (total_amount+"+amcChargeBean.getTotalAmount()+") ,balance = (balance+"+amcChargeBean.getBalance()+") ,disc_total_amount = (disc_total_amount+"+amcChargeBean.getDiscTotalAmount()+") ");
                 sqlUpdate.append(" where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
                         " and cust_id="+amcChargeBean.getCustId()+" and subject_id="+amcChargeBean.getSubjectId()+" ");
                 LOG.info("账单更新语句：["+sqlUpdate+"]");
@@ -179,18 +180,37 @@ public class AmcPreferentialSV implements Serializable{
      * @return
      * @author LiangMeng
      */
-    public boolean  saveOrUpdateBdBean(long bdAmount,AmcChargeBean amcChargeBean,Connection conn,String billMonth) {
+    public boolean  saveOrUpdateBdBean(long bdAmount,AmcChargeBean amcChargeBean,Connection conn,String billMonth,List<Map<String, String>> billSubjectList) {
         boolean isSuccess=true;
         try {
             conn.setAutoCommit(false);        
             /*1.查询是否存在*/
+            String billSubjectCondition = "";
+            if(billSubjectList!=null&&billSubjectList.size()>1){
+                billSubjectCondition += " and subject_id in(";
+                for(int i=0;i<billSubjectList.size();i++){
+                    billSubjectCondition+=billSubjectList.get(i).get("ext_value");
+                    if(i!=(billSubjectList.size()-1)){
+                        billSubjectCondition+=",";
+                    }
+                }
+                billSubjectCondition+= ")";
+            }
             long balance = bdAmount;
             long totalAmount = bdAmount;
-            String chargeSql = "select  IFNULL(sum(balance),0) as balance ,IFNULL(sum(total_amount),0) as totalAmount from amc_charge_"+billMonth+" where acct_id="+amcChargeBean.getAcctId()+" and tenant_id = '"+amcChargeBean.getTenantId()+"' and subject_id <>"+amcChargeBean.getSubjectId();
+            String chargeSql = "select  IFNULL(sum(balance),0) as balance ,IFNULL(sum(total_amount),0) as totalAmount from amc_charge_"
+            +billMonth+" where acct_id="+amcChargeBean.getAcctId()+" and tenant_id = '"+amcChargeBean.getTenantId()+"'"+
+            billSubjectCondition;
             List<AmcChargeBean> list = JdbcTemplate.query(chargeSql.toString(),conn,  new BeanListHandler<AmcChargeBean>(AmcChargeBean.class));
             if(list!=null&&list.size()>0){
                 balance = balance -list.get(0).getBalance();
                 totalAmount = totalAmount -list.get(0).getTotalAmount();
+            }
+            if(balance<0){
+                balance = 0;
+            }
+            if(totalAmount<0){
+                totalAmount = 0;
             }
             
             
@@ -268,20 +288,38 @@ public class AmcPreferentialSV implements Serializable{
      * @return
      * @author LiangMeng
      */
-    public boolean  saveOrUpdateFdBean(long fdAmount,AmcChargeBean amcChargeBean,Connection conn,String billMonth) {
+    public boolean  saveOrUpdateFdBean(long fdAmount,AmcChargeBean amcChargeBean,Connection conn,String billMonth,List<Map<String, String>> billSubjectList) {
         boolean isSuccess=true;
         try {
             conn.setAutoCommit(false);        
             /*1.查询是否存在*/
+
+            String billSubjectCondition = "";
+            if(billSubjectList!=null&&billSubjectList.size()>1){
+                billSubjectCondition += " and subject_id in(";
+                for(int i=0;i<billSubjectList.size();i++){
+                    billSubjectCondition+=billSubjectList.get(i).get("ext_value");
+                    if(i!=(billSubjectList.size()-1)){
+                        billSubjectCondition+=",";
+                    }
+                }
+                billSubjectCondition+= ")";
+            }
             AmcChargeBean chargeBeanDB = this.queryCharge(amcChargeBean, conn,billMonth);
             int saveOrUpdateResult  =0;
             long balance = fdAmount;
             long totalAmount = fdAmount;
-            String chargeSql = "select  IFNULL(sum(balance),0) as balance ,IFNULL(sum(total_amount),0) as total_amount from amc_charge_"+billMonth+" where acct_id="+amcChargeBean.getAcctId()+" and tenant_id = '"+amcChargeBean.getTenantId()+"' and subject_id <>"+amcChargeBean.getSubjectId();
+            String chargeSql = "select  IFNULL(sum(balance),0) as balance ,IFNULL(sum(total_amount),0) as totalAmount from amc_charge_"+billMonth+" where acct_id="+amcChargeBean.getAcctId()+" and tenant_id = '"+amcChargeBean.getTenantId()+"'"+billSubjectCondition;
             List<AmcChargeBean> list = JdbcTemplate.query(chargeSql.toString(),conn,  new BeanListHandler<AmcChargeBean>(AmcChargeBean.class));
             if(list!=null&&list.size()>0){
                 balance = balance -list.get(0).getBalance();
                 totalAmount = totalAmount -list.get(0).getTotalAmount();
+            }
+            if(balance<0){
+                balance = 0;
+            }
+            if(totalAmount<0){
+                totalAmount = 0;
             }
             if(chargeBeanDB==null||chargeBeanDB.getAcctId()==null){
                 /*2.如果不存在该科目账单，则新增*/
@@ -448,6 +486,9 @@ public class AmcPreferentialSV implements Serializable{
         List<Map<String, Object>> writeOffMonthList = AmcUtil.queryWriteOffMonths(tenantId,
                 acctId, conn); 
         long balance = 0;
+        if(writeOffMonthList==null||writeOffMonthList.size()==0){
+            throw new BusinessException("999999", "获取欠费信息失败，租户id["+tenantId+"]，账户id["+acctId+"]");
+        }
         for(Map<String, Object> monthMap : writeOffMonthList){
             String invoiceSql = "select  IFNULL(sum(balance),0) as balance from amc_invoice_"+monthMap.get("yyyyMM")+" where acct_id="+acctId+" and tenant_id = '"+tenantId+"'";
             List<AmcInvoiceBean> list = JdbcTemplate.query(invoiceSql.toString(),conn,  new BeanListHandler<AmcInvoiceBean>(AmcInvoiceBean.class));

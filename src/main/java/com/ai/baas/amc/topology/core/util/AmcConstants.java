@@ -137,23 +137,23 @@ public class AmcConstants {
 	    
         
         //优惠类型:显示折扣
-        public static final String CALC_TYPE_XSZK = "xszk";
+        public static final String CALC_TYPE_XSZK = "dz";
         //折扣率
-        public static final String XSZK_ZKL = "xszk_zkl";
+        public static final String XSZK_ZKL = "discount_percent";
+        
 
         //生效日期
-        public static final String XSZK_EFFECT_DATE = "xszk_effect_date";
+        public static final String XSZK_EFFECT_DATE = "discount_start_date";
 
         //失效日期
-        public static final String XSZK_EXPIRE_DATE = "xszk_expire_date";
-        
+        public static final String XSZK_EXPIRE_DATE = "discount_start_date";
 
         //执行时段标志
         public static final String XSZK_TIME_FLAG = "xszk_time_flag";
         //执行生效时段
-        public static final String XSZK_EFFECT_TIME = "xszk_effect_time";
+        public static final String XSZK_EFFECT_TIME = "discount_start_time";
         //执行失效时段
-        public static final String XSZK_EXPIRE_TIME = "xszk_expire_time";
+        public static final String XSZK_EXPIRE_TIME = "discount_end_time";
         
         /**
          * 产品状态

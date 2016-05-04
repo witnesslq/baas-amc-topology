@@ -1,5 +1,6 @@
 package com.ai.baas.amc.topology.preferential.bolt;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -186,7 +187,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                 /* 4.3 根据扩展信息中相应的参数配置，计算优惠额度，对账单项进行优惠 */
                 List<Map<String, String>> productDetailList = this.queryProductDetailList(tenantId,
                         productId);
-                int i=0;
+                int i = 0;
                 for (Map<String, String> pruductDetailMap : productDetailList) {
                     String calcType = pruductDetailMap.get(AmcConstants.ProductInfo.CALC_TYPE);
                     String newSubject = pruductDetailMap.get(AmcConstants.ProductInfo.NEW_SUBJECT);
@@ -201,16 +202,18 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         for (Map<String, String> map : billSubjectList) {
                             String billSubjects = map.get("ext_value");
                             for (AmcChargeBean amcChargeBean : chargeListAfter) {
-                                if ((amcChargeBean.getSubjectId()+"").equals(billSubjects)) {
+                                if ((amcChargeBean.getSubjectId() + "").equals(billSubjects)) {
                                     billSubjectAmount += amcChargeBean.getTotalAmount();
                                 }
                             }
                         }
-                        if(i==0){
+                        if (i == 0) {
                             for (AmcChargeBean amcChargeBean : chargeListAfter) {
-                                    amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);      
-                               
-                            } 
+                                amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,
+                                        JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),
+                                        billMonth);
+
+                            }
                         }
                         /* 4.3.1.2 获取该产品保底金额 */
                         List<Map<String, String>> extList = this.queryProductExtList(tenantId,
@@ -219,16 +222,18 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         AmcChargeBean amcChargeBean = new AmcChargeBean();
                         if (billSubjectAmount < bdAmount) {//
                             /* 4.3.1.3 如果参考科目金额小于保底，则将计费科目金额 */
-                            this.initChargeBean(amcChargeBean, data,
-                                    (billSubjectAmount), Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateBdBean(bdAmount,amcChargeBean,
-                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);
+                            this.initChargeBean(amcChargeBean, data, (billSubjectAmount),
+                                    Long.parseLong(newSubject));
+                            amcChargeSV.saveOrUpdateBdBean(bdAmount, amcChargeBean,
+                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth,
+                                    billSubjectList);
                         } else {
                             /* 4.3.1.4 如果参考科目金额小于保底，则将计费科目金额 */
                             this.initChargeBean(amcChargeBean, data, (0),
                                     Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateBdBean(bdAmount,amcChargeBean,
-                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);
+                            amcChargeSV.saveOrUpdateBdBean(bdAmount, amcChargeBean,
+                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth,
+                                    billSubjectList);
                         }
                     }
                     /* 4.3.2 封顶 */
@@ -238,16 +243,18 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         for (Map<String, String> map : billSubjectList) {
                             String billSubjects = map.get("ext_value");
                             for (AmcChargeBean amcChargeBean : chargeListAfter) {
-                                if ((amcChargeBean.getSubjectId()+"").equals(billSubjects)) {
+                                if ((amcChargeBean.getSubjectId() + "").equals(billSubjects)) {
                                     billSubjectAmount += amcChargeBean.getTotalAmount();
                                 }
                             }
                         }
-                        if(i==0){
+                        if (i == 0) {
                             for (AmcChargeBean amcChargeBean : chargeListAfter) {
-                                    amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);      
-                               
-                            } 
+                                amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,
+                                        JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),
+                                        billMonth);
+
+                            }
                         }
                         /* 4.3.2.2 获取该产品封顶金额 */
                         List<Map<String, String>> extList = this.queryProductExtList(tenantId,
@@ -259,49 +266,66 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                             /* 4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额 */
                             this.initChargeBean(amcChargeBean, data, (billSubjectAmount),
                                     Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateFdBean(fdAmount,amcChargeBean,
-                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);
+                            amcChargeSV.saveOrUpdateFdBean(fdAmount, amcChargeBean,
+                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth,
+                                    billSubjectList);
                         } else if (billSubjectAmount <= fdAmount) {
                             /* 4.3.2.4 如果参考科目金额小于或等于封顶金额，则计费金额等于计费金额 */
                             this.initChargeBean(amcChargeBean, data, (0),
                                     Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateFdBean(fdAmount,amcChargeBean,
-                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);
+                            amcChargeSV.saveOrUpdateFdBean(fdAmount, amcChargeBean,
+                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth,
+                                    billSubjectList);
                         }
                     }
                     /* 限时折扣 */
                     if (AmcConstants.ProductInfo.CALC_TYPE_XSZK.equals(calcType)) {
-                        long billSubjectAmount = 0;
                         /* 4.3.3.1 优惠科目的金额 */
-                        for (AmcChargeBean amcChargeBean : chargeListAfter) {
-                            if (amcChargeBean.getSubjectId().equals(billSubject)) {
-                                billSubjectAmount = amcChargeBean.getTotalAmount();
-                            }
-                        }
                         /* 4.3.2.2 获取该产品封顶金额 */
                         List<Map<String, String>> zklList = this.queryProductExtList(tenantId,
                                 productId, AmcConstants.ProductInfo.XSZK_ZKL);
                         long zkl = Long.parseLong(zklList.get(0).get(
                                 AmcConstants.ProductInfo.EXT_VALUE));
-                        List<Map<String, String>> extList = this.queryProductExtList(tenantId,
-                                productId, AmcConstants.ProductInfo.XSZK_ZKL);
-                        long ss = Long.parseLong(extList.get(0).get(
-                                AmcConstants.ProductInfo.EXT_VALUE));
+                        List<Map<String, String>> extListEffectDate = this.queryProductExtList(tenantId,
+                                productId, AmcConstants.ProductInfo.XSZK_EFFECT_DATE);
+                        String effectDate = extListEffectDate.get(0).get(
+                                AmcConstants.ProductInfo.EXT_VALUE);
+                        List<Map<String, String>> extListExpireDate = this.queryProductExtList(tenantId,
+                                productId, AmcConstants.ProductInfo.XSZK_EXPIRE_DATE);
+                        String expireDate = extListExpireDate.get(0).get(
+                                AmcConstants.ProductInfo.EXT_VALUE);
 
+                        List<Map<String, String>> extListEffectTime = this.queryProductExtList(tenantId,
+                                productId, AmcConstants.ProductInfo.XSZK_EXPIRE_TIME);
+                        String effectTime = extListEffectTime.get(0).get(
+                                AmcConstants.ProductInfo.EXT_VALUE);
+
+                        List<Map<String, String>> extListExpireTime = this.queryProductExtList(tenantId,
+                                productId, AmcConstants.ProductInfo.XSZK_EXPIRE_TIME);
+
+                        String expireTime = extListExpireTime.get(0).get(
+                                AmcConstants.ProductInfo.EXT_VALUE);
                         
-                        for (Map<String, String> map : billSubjectList) {
-                            String billSubjects = map.get("ext_value");
-                            for (AmcChargeBean amcChargeBean : chargeListAfter) {
-                                if ((amcChargeBean.getSubjectId()+"").equals(billSubjects)) {
-                                    billSubjectAmount += amcChargeBean.getTotalAmount();
-                                }
-                            }
+                        boolean gotyDiscount = false;
+                        String nowTime = new SimpleDateFormat("hhmmss").format(new Date());
+                        String nowDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
+                        if(Long.parseLong(nowDate)>=Long.parseLong(effectDate)&&Long.parseLong(nowDate)<=Long.parseLong(expireDate)
+                                &&Long.parseLong(nowTime)>=Long.parseLong(effectTime)&&Long.parseLong(nowTime)<=Long.parseLong(expireTime)){
+                            gotyDiscount = true;
                         }
-                        if(i==0){
+                        if (i == 0) {
                             for (AmcChargeBean amcChargeBean : chargeListAfter) {
-                                    amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);      
-                               
-                            } 
+                                if(gotyDiscount){
+                                    amcChargeBean.setTotalAmount(amcChargeBean.getTotalAmount()*zkl);
+                                    amcChargeBean.setBalance(amcChargeBean.getBalance()*zkl);
+                                    amcChargeBean.setDiscTotalAmount(amcChargeBean.getTotalAmount()
+                                            - amcChargeBean.getTotalAmount()*zkl);
+                                }
+                                amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,
+                                        JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),
+                                        billMonth);
+
+                            }
                         }
                     }
                 }
