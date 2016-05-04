@@ -17,6 +17,7 @@ import backtype.storm.tuple.Tuple;
 
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
+import com.ai.baas.amc.topology.core.util.AmcUtil;
 import com.ai.baas.amc.topology.core.util.DSUtil;
 import com.ai.baas.amc.topology.writeoff.service.AmcWriteOffSV;
 import com.ai.baas.dshm.client.CacheFactoryUtil;
@@ -87,7 +88,7 @@ public class WriteOffBolt extends BaseBasicBolt {
             /* 2. 执行销账*/
             boolean isSuccess = amcWriteOffSV.writeOffCore(acctId, tenantId, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), cacheClient, client);
 
-            List<Map<String, Object>> writeOffMonthList = amcWriteOffSV.queryWriteOffMonths(tenantId,
+            List<Map<String, Object>> writeOffMonthList = AmcUtil.queryWriteOffMonths(tenantId,
                     acctId, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
             int updateMonth = amcWriteOffSV.updateOweInfoMonth(tenantId, acctId, writeOffMonthList, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
             if(!isSuccess){

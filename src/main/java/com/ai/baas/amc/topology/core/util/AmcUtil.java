@@ -4,14 +4,18 @@ import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ai.baas.amc.topology.writeoff.bean.AmcOweInfoBean;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.jdbc.JdbcTemplate;
 import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.base.exception.BusinessException;
+import com.ai.opt.base.exception.SystemException;
 
 public class AmcUtil {
 
@@ -82,5 +86,46 @@ public class AmcUtil {
             throw new BusinessException(AmcConstants.FailConstant.FAIL_CODE_GET_CACHE_DATA, "缓存中获取数据，转换报文异常");
         } 
         return fieldList;
+    }
+    
+    /**
+     * 获取未销账月份列表
+     * 
+     * @param acctId
+     * @return
+     * @author LiangMeng
+     */
+    public static List<Map<String, Object>> queryWriteOffMonths(String tenantId, String acctId,
+            Connection conn) {
+        List<Map<String, Object>> list = null;
+        StringBuffer sql = new StringBuffer();
+        sql.append("select tenant_id as tenantId,acct_id as acctId,");
+        sql.append("balance,month,create_time as createTime,confirm_time as confirmTime ");
+        sql.append("from amc_owe_info where acct_id = ");
+        sql.append(acctId);
+        sql.append(" and tenant_id ='");
+        sql.append(tenantId);
+        sql.append("'");
+        AmcOweInfoBean amcOweInfoBean = null;
+        try {
+            if (conn != null) {
+                List<AmcOweInfoBean> result = JdbcTemplate.query(sql.toString(), conn,
+                        new BeanListHandler<AmcOweInfoBean>(AmcOweInfoBean.class));
+                if (result != null && result.size() > 0) {
+                    amcOweInfoBean = result.get(0);
+                    String month = amcOweInfoBean.getMonth();
+                    if (month == null) {
+                        throw new SystemException("获取最后未销账月份出错");
+                    } else {
+                        list = DateUtil.getPerMonth(month);
+                    }
+                }
+            } else {
+                throw new SystemException("999999", "未取得数据库的连接");
+            }
+        } catch (Exception e) {
+            LOG.error("账单查询报错", e);
+        }
+        return list;
     }
 }

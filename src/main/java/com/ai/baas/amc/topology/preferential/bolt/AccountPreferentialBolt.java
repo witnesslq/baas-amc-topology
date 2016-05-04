@@ -103,6 +103,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             data = messageParser.getData();
             String tenantId = data.get(AmcConstants.FmtFeildName.TENANT_ID);
             String subsId = data.get(AmcConstants.FmtFeildName.SUBS_ID);
+            String acctId = data.get(AmcConstants.FmtFeildName.ACCT_ID);
             /* 2.根据传入的详单科目查询对应的账单科目 */
             String drSubject1 = data.get(AmcConstants.FmtFeildName.SUBJECT1);
             String billSubject1 = this.queryBillSubject(tenantId, drSubject1);
@@ -219,14 +220,14 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         if (billSubjectAmount < bdAmount) {//
                             /* 4.3.1.3 如果参考科目金额小于保底，则将计费科目金额 */
                             this.initChargeBean(amcChargeBean, data,
-                                    (bdAmount - billSubjectAmount), Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateNewBean(amcChargeBean,
+                                    (billSubjectAmount), Long.parseLong(newSubject));
+                            amcChargeSV.saveOrUpdateBdBean(bdAmount,amcChargeBean,
                                     JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);
                         } else {
                             /* 4.3.1.4 如果参考科目金额小于保底，则将计费科目金额 */
                             this.initChargeBean(amcChargeBean, data, (0),
                                     Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateNewBean(amcChargeBean,
+                            amcChargeSV.saveOrUpdateBdBean(bdAmount,amcChargeBean,
                                     JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);
                         }
                     }
@@ -256,15 +257,15 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         AmcChargeBean amcChargeBean = new AmcChargeBean();
                         if (billSubjectAmount > fdAmount) {
                             /* 4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额 */
-                            this.initChargeBean(amcChargeBean, data, (fdAmount-billSubjectAmount),
+                            this.initChargeBean(amcChargeBean, data, (billSubjectAmount),
                                     Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateNewBean(amcChargeBean,
+                            amcChargeSV.saveOrUpdateFdBean(fdAmount,amcChargeBean,
                                     JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);
                         } else if (billSubjectAmount <= fdAmount) {
                             /* 4.3.2.4 如果参考科目金额小于或等于封顶金额，则计费金额等于计费金额 */
                             this.initChargeBean(amcChargeBean, data, (0),
                                     Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateNewBean(amcChargeBean,
+                            amcChargeSV.saveOrUpdateFdBean(fdAmount,amcChargeBean,
                                     JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth);
                         }
                     }
@@ -305,7 +306,10 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                     }
                 }
             }
-
+            amcChargeSV.rebalceOwnInfo(tenantId, acctId);
+            List<Object> datas = new ArrayList<Object>();
+            datas.add(inputData);
+            collector.emit(datas);
             /* 6.发送信控消息 */
             // kafkaProxy.sendMessage(inputData);
 

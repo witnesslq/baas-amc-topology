@@ -83,11 +83,11 @@ public class DAOTest {
         DSUtil.initSeqDS(stormConf);
         AmcWriteOffSV sv = new AmcWriteOffSV();
         try {
-            //sv.writeOffCore("48", "VIV-BYD", JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),cacheClient,client);
-            List<Map<String, Object>> writeOffMonthList = sv.queryWriteOffMonths("VIV-BYD",
-                    "48", JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
-            int updateMonth = sv.updateOweInfoMonth("VIV-BYD",
-                    "48",  writeOffMonthList, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+//            //sv.writeOffCore("48", "VIV-BYD", JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),cacheClient,client);
+//            List<Map<String, Object>> writeOffMonthList = sv.queryWriteOffMonths("VIV-BYD",
+//                    "48", JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
+//            int updateMonth = sv.updateOweInfoMonth("VIV-BYD",
+//                    "48",  writeOffMonthList, JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT));
         } catch (Exception e) {
             e.printStackTrace();
         }

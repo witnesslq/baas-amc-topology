@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ai.baas.amc.topology.core.util.AmcConstants;
+import com.ai.baas.amc.topology.core.util.AmcUtil;
 import com.ai.baas.amc.topology.core.util.DBUtil;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.preferential.bean.AmcInvoiceBean;
@@ -178,11 +179,21 @@ public class AmcPreferentialSV implements Serializable{
      * @return
      * @author LiangMeng
      */
-    public boolean  saveOrUpdateNewBean(AmcChargeBean amcChargeBean,Connection conn,String billMonth) {
+    public boolean  saveOrUpdateBdBean(long bdAmount,AmcChargeBean amcChargeBean,Connection conn,String billMonth) {
         boolean isSuccess=true;
         try {
             conn.setAutoCommit(false);        
             /*1.查询是否存在*/
+            long balance = bdAmount;
+            long totalAmount = bdAmount;
+            String chargeSql = "select  IFNULL(sum(balance),0) as balance ,IFNULL(sum(total_amount),0) as totalAmount from amc_charge_"+billMonth+" where acct_id="+amcChargeBean.getAcctId()+" and tenant_id = '"+amcChargeBean.getTenantId()+"' and subject_id <>"+amcChargeBean.getSubjectId();
+            List<AmcChargeBean> list = JdbcTemplate.query(chargeSql.toString(),conn,  new BeanListHandler<AmcChargeBean>(AmcChargeBean.class));
+            if(list!=null&&list.size()>0){
+                balance = balance -list.get(0).getBalance();
+                totalAmount = totalAmount -list.get(0).getTotalAmount();
+            }
+            
+            
             AmcChargeBean chargeBeanDB = this.queryCharge(amcChargeBean, conn,billMonth);
             int saveOrUpdateResult  =0;
             if(chargeBeanDB==null||chargeBeanDB.getAcctId()==null){
@@ -204,13 +215,13 @@ public class AmcPreferentialSV implements Serializable{
                 sqlCharge.append("','");
                 sqlCharge.append(amcChargeBean.getSubjectId());
                 sqlCharge.append("',");
-                sqlCharge.append(amcChargeBean.getTotalAmount());
+                sqlCharge.append(totalAmount);
                 sqlCharge.append(",");
                 sqlCharge.append(amcChargeBean.getAdjustAfterwards());
                 sqlCharge.append(",");
                 sqlCharge.append(amcChargeBean.getDiscTotalAmount());
                 sqlCharge.append(",");
-                sqlCharge.append(amcChargeBean.getBalance());
+                sqlCharge.append(balance);
                 sqlCharge.append(",");
                 sqlCharge.append(amcChargeBean.getPayStatus());
                 sqlCharge.append(",");
@@ -222,15 +233,102 @@ public class AmcPreferentialSV implements Serializable{
                 sqlCharge.append(",'");
                 sqlCharge.append(amcChargeBean.getTenantId());
                 sqlCharge.append("') ");                
-                LOG.info("账单插入sql：["+sqlCharge+"]");
+                LOG.info("保底账单科目插入sql：["+sqlCharge+"]");
                 saveOrUpdateResult  = DBUtil.saveOrUpdate(sqlCharge.toString(), conn,false);
             }else{
                 /*3.如果已经存在该科目账单，则更新*/
                 StringBuffer sqlUpdate = new StringBuffer();
-                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = "+amcChargeBean.getTotalAmount()+" ,balance = "+amcChargeBean.getBalance()+" ");
+                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = "+totalAmount+" ,balance = "+balance+" ");
                 sqlUpdate.append(" where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
                         " and cust_id="+amcChargeBean.getCustId()+" and subject_id="+amcChargeBean.getSubjectId()+" ");
-                LOG.info("账单更新语句：["+sqlUpdate+"]");
+                LOG.info("保底账单科目更新语句：["+sqlUpdate+"]");
+                saveOrUpdateResult  = DBUtil.saveOrUpdate(sqlUpdate.toString(), conn,false);
+            }
+
+            int resultInvoice =  this.reBalanceInvoice(amcChargeBean,conn,billMonth);
+            if(saveOrUpdateResult>0&&resultInvoice>0){
+                conn.commit();
+            }else{
+                isSuccess = false;
+                conn.rollback();
+            }
+        } catch (Exception e) { 
+            LOG.error("更新账单异常：["+e.getMessage()+"]",e);
+            try {
+                conn.rollback();
+            } catch (SQLException e1) {
+                LOG.error("更新账单异常：["+e1.getMessage()+"]",e1);
+            }
+        }
+        return isSuccess;
+    }
+    /**
+     * 将计算后结果输出到账单表
+     * 
+     * @return
+     * @author LiangMeng
+     */
+    public boolean  saveOrUpdateFdBean(long fdAmount,AmcChargeBean amcChargeBean,Connection conn,String billMonth) {
+        boolean isSuccess=true;
+        try {
+            conn.setAutoCommit(false);        
+            /*1.查询是否存在*/
+            AmcChargeBean chargeBeanDB = this.queryCharge(amcChargeBean, conn,billMonth);
+            int saveOrUpdateResult  =0;
+            long balance = fdAmount;
+            long totalAmount = fdAmount;
+            String chargeSql = "select  IFNULL(sum(balance),0) as balance ,IFNULL(sum(total_amount),0) as total_amount from amc_charge_"+billMonth+" where acct_id="+amcChargeBean.getAcctId()+" and tenant_id = '"+amcChargeBean.getTenantId()+"' and subject_id <>"+amcChargeBean.getSubjectId();
+            List<AmcChargeBean> list = JdbcTemplate.query(chargeSql.toString(),conn,  new BeanListHandler<AmcChargeBean>(AmcChargeBean.class));
+            if(list!=null&&list.size()>0){
+                balance = balance -list.get(0).getBalance();
+                totalAmount = totalAmount -list.get(0).getTotalAmount();
+            }
+            if(chargeBeanDB==null||chargeBeanDB.getAcctId()==null){
+                /*2.如果不存在该科目账单，则新增*/
+                StringBuffer sqlCharge = new StringBuffer();           
+                sqlCharge.append(" insert into amc_charge_");
+                sqlCharge.append(billMonth);
+                sqlCharge.append(" (charge_seq,acct_id,subs_id,service_id,subject_id,total_amount, ");
+                sqlCharge.append("         adjust_afterwards,disc_total_amount,balance,pay_status, ");
+                sqlCharge.append("         last_pay_date,cust_id,cust_type,tenant_id ) ");
+                sqlCharge.append("         values(");
+                sqlCharge.append(amcChargeBean.getChargeSeq());
+                sqlCharge.append(",");
+                sqlCharge.append(amcChargeBean.getAcctId());
+                sqlCharge.append(",");
+                sqlCharge.append(amcChargeBean.getSubsId());
+                sqlCharge.append(",'");
+                sqlCharge.append(amcChargeBean.getServiceId());
+                sqlCharge.append("','");
+                sqlCharge.append(amcChargeBean.getSubjectId());
+                sqlCharge.append("',");
+                sqlCharge.append(totalAmount);
+                sqlCharge.append(",");
+                sqlCharge.append(amcChargeBean.getAdjustAfterwards());
+                sqlCharge.append(",");
+                sqlCharge.append(amcChargeBean.getDiscTotalAmount());
+                sqlCharge.append(",");
+                sqlCharge.append(balance);
+                sqlCharge.append(",");
+                sqlCharge.append(amcChargeBean.getPayStatus());
+                sqlCharge.append(",");
+                sqlCharge.append("now()");
+                sqlCharge.append(",");
+                sqlCharge.append(amcChargeBean.getCustId());
+                sqlCharge.append(",");
+                sqlCharge.append(amcChargeBean.getCustType());
+                sqlCharge.append(",'");
+                sqlCharge.append(amcChargeBean.getTenantId());
+                sqlCharge.append("') ");                
+                LOG.info("封顶账单科目插入sql：["+sqlCharge+"]");
+                saveOrUpdateResult  = DBUtil.saveOrUpdate(sqlCharge.toString(), conn,false);
+            }else{
+                /*3.如果已经存在该科目账单，则更新*/
+                StringBuffer sqlUpdate = new StringBuffer();
+                sqlUpdate.append(" update amc_charge_"+billMonth+" set total_amount = "+totalAmount+" ,balance = "+balance+" ");
+                sqlUpdate.append(" where subs_id="+amcChargeBean.getSubsId()+" and acct_id="+amcChargeBean.getAcctId()+
+                        " and cust_id="+amcChargeBean.getCustId()+" and subject_id="+amcChargeBean.getSubjectId()+" ");
+                LOG.info("封顶账单科目更新语句：["+sqlUpdate+"]");
                 saveOrUpdateResult  = DBUtil.saveOrUpdate(sqlUpdate.toString(), conn,false);
             }
             
@@ -339,14 +437,36 @@ public class AmcPreferentialSV implements Serializable{
             LOG.info("账单总表更新语句：["+sqlUpdate+"]");
             result  = DBUtil.saveOrUpdate(sqlUpdate.toString(), conn,false);
         }
-        StringBuffer sqlUpdate = new StringBuffer();
-        sqlUpdate.append(" update amc_owe_info  set balance = (balance+"+amcChargeBean.getBalance()+") ");
-        sqlUpdate.append(" where  acct_id="+amcChargeBean.getAcctId()+
-                " and cust_id="+amcChargeBean.getCustId()+" ");
-        LOG.info("欠费总表更新语句：["+sqlUpdate+"]");
-        result  = DBUtil.saveOrUpdate(sqlUpdate.toString(), conn,false);
         return result;
     }
+    
+    public int rebalceOwnInfo(String tenantId,String acctId ) throws Exception{
+        /*1.获取最后未销账月份*/
+        int result = 0;
+        Connection conn = JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT);
+        conn.setAutoCommit(false);
+        List<Map<String, Object>> writeOffMonthList = AmcUtil.queryWriteOffMonths(tenantId,
+                acctId, conn); 
+        long balance = 0;
+        for(Map<String, Object> monthMap : writeOffMonthList){
+            String invoiceSql = "select  IFNULL(sum(balance),0) as balance from amc_invoice_"+monthMap.get("yyyyMM")+" where acct_id="+acctId+" and tenant_id = '"+tenantId+"'";
+            List<AmcInvoiceBean> list = JdbcTemplate.query(invoiceSql.toString(),conn,  new BeanListHandler<AmcInvoiceBean>(AmcInvoiceBean.class));
+            if(list!=null&&list.size()>0){
+                balance += list.get(0).getBalance();
+            }
+           }
+        
+        StringBuffer sqlUpdate = new StringBuffer();
+        sqlUpdate.append(" update amc_owe_info  set balance = ("+balance+") ");
+        sqlUpdate.append(" where  acct_id="+acctId+
+                "  and tenant_id = '"+tenantId+"'");
+        LOG.info("欠费总表更新语句：["+sqlUpdate+"]");
+        result  = DBUtil.saveOrUpdate(sqlUpdate.toString(), conn,false);
+        conn.commit();
+        return result;
+    }
+   
+    
     private AmcInvoiceBean queryInvoice(AmcChargeBean bean,Connection conn,String billMonth){
         AmcInvoiceBean amcInvoiceBean = null;
         StringBuffer sql = new StringBuffer();

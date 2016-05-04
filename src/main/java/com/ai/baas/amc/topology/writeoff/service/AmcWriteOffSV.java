@@ -15,14 +15,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.ai.baas.amc.topology.core.util.AmcConstants;
+import com.ai.baas.amc.topology.core.util.AmcUtil;
 import com.ai.baas.amc.topology.core.util.DBUtil;
-import com.ai.baas.amc.topology.core.util.DateUtil;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.writeoff.bean.AmcDeductRuleBean;
 import com.ai.baas.amc.topology.writeoff.bean.AmcFundBookBean;
 import com.ai.baas.amc.topology.writeoff.bean.AmcFundDetailBean;
 import com.ai.baas.amc.topology.writeoff.bean.AmcFundSerialBean;
-import com.ai.baas.amc.topology.writeoff.bean.AmcOweInfoBean;
 import com.ai.baas.amc.topology.writeoff.bean.AmcSettleDetailBean;
 import com.ai.baas.amc.topology.writeoff.bean.AmcSettleLogBean;
 import com.ai.baas.dshm.client.interfaces.IDshmClient;
@@ -58,7 +57,7 @@ public class AmcWriteOffSV implements Serializable {
             /* 1.查询账本列表 */
             List<AmcFundBookBean> fundBookList = this.queryFundBookList(tenantId, acctId, conn);
             /* 2.查询可销账月份 */
-            List<Map<String, Object>> writeOffMonthList = this.queryWriteOffMonths(tenantId,
+            List<Map<String, Object>> writeOffMonthList = AmcUtil.queryWriteOffMonths(tenantId,
                     acctId, conn);
 
             String thisMonth = new SimpleDateFormat("yyyyMM").format(new Date());
@@ -435,46 +434,7 @@ public class AmcWriteOffSV implements Serializable {
         return list;
     }
 
-    /**
-     * 获取未销账月份列表
-     * 
-     * @param acctId
-     * @return
-     * @author LiangMeng
-     */
-    public List<Map<String, Object>> queryWriteOffMonths(String tenantId, String acctId,
-            Connection conn) {
-        List<Map<String, Object>> list = null;
-        StringBuffer sql = new StringBuffer();
-        sql.append("select tenant_id as tenantId,acct_id as acctId,");
-        sql.append("balance,month,create_time as createTime,confirm_time as confirmTime ");
-        sql.append("from amc_owe_info where acct_id = ");
-        sql.append(acctId);
-        sql.append(" and tenant_id ='");
-        sql.append(tenantId);
-        sql.append("'");
-        AmcOweInfoBean amcOweInfoBean = null;
-        try {
-            if (conn != null) {
-                List<AmcOweInfoBean> result = JdbcTemplate.query(sql.toString(), conn,
-                        new BeanListHandler<AmcOweInfoBean>(AmcOweInfoBean.class));
-                if (result != null && result.size() > 0) {
-                    amcOweInfoBean = result.get(0);
-                    String month = amcOweInfoBean.getMonth();
-                    if (month == null) {
-                        throw new SystemException("获取最后未销账月份出错");
-                    } else {
-                        list = DateUtil.getPerMonth(month);
-                    }
-                }
-            } else {
-                throw new SystemException("999999", "未取得数据库的连接");
-            }
-        } catch (Exception e) {
-            LOG.error("账单查询报错", e);
-        }
-        return list;
-    }
+    
 
     /**
      * 查询当前账单
