@@ -142,11 +142,6 @@ public class AmcConstants {
         public static final String XSZK_ZKL = "discount_percent";
         
 
-        //生效日期
-        public static final String XSZK_EFFECT_DATE = "discount_start_date";
-
-        //失效日期
-        public static final String XSZK_EXPIRE_DATE = "discount_start_date";
 
         //执行时段标志
         public static final String XSZK_TIME_FLAG = "xszk_time_flag";

@@ -1,5 +1,6 @@
 package com.ai.baas.amc.topology.preferential.bolt;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -105,6 +106,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             String tenantId = data.get(AmcConstants.FmtFeildName.TENANT_ID);
             String subsId = data.get(AmcConstants.FmtFeildName.SUBS_ID);
             String acctId = data.get(AmcConstants.FmtFeildName.ACCT_ID);
+            String startTime = data.get(AmcConstants.FmtFeildName.START_TIME);
             /* 2.根据传入的详单科目查询对应的账单科目 */
             String drSubject1 = data.get(AmcConstants.FmtFeildName.SUBJECT1);
             String billSubject1 = this.queryBillSubject(tenantId, drSubject1);
@@ -174,20 +176,19 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                             Long.parseLong(billSubject3));
                 }
             }
-
+            
             List<AmcChargeBean> chargeListAfter = this.mergeChargeBean(beanAfter1, beanAfter2,
                     beanAfter3);
             /* 4.优惠计算 */
             /* 4.1 查询该账户订购的产品列表 */
-            List<AmcProductInfoBean> productList = this.queryProductList(tenantId, subsId);
+            List<AmcProductInfoBean> productList = this.queryProductList(tenantId, subsId,startTime);
             /* 4.2 循环遍历产品列表，根据优先级，查询对应的扩展信息 */
-
+            boolean hasDeposit = false;
             for (AmcProductInfoBean product : productList) {
                 String productId = product.getProductId();
                 /* 4.3 根据扩展信息中相应的参数配置，计算优惠额度，对账单项进行优惠 */
                 List<Map<String, String>> productDetailList = this.queryProductDetailList(tenantId,
                         productId);
-                int i = 0;
                 for (Map<String, String> pruductDetailMap : productDetailList) {
                     String calcType = pruductDetailMap.get(AmcConstants.ProductInfo.CALC_TYPE);
                     String newSubject = pruductDetailMap.get(AmcConstants.ProductInfo.NEW_SUBJECT);
@@ -207,7 +208,8 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                                 }
                             }
                         }
-                        if (i == 0) {
+                        if (!hasDeposit) {
+                            hasDeposit = true;
                             for (AmcChargeBean amcChargeBean : chargeListAfter) {
                                 amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,
                                         JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),
@@ -248,7 +250,8 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                                 }
                             }
                         }
-                        if (i == 0) {
+                        if (!hasDeposit) {
+                            hasDeposit = true;
                             for (AmcChargeBean amcChargeBean : chargeListAfter) {
                                 amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,
                                         JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),
@@ -262,64 +265,68 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                         long fdAmount = Long.parseLong(extList.get(0).get(
                                 AmcConstants.ProductInfo.EXT_VALUE));
                         AmcChargeBean amcChargeBean = new AmcChargeBean();
-                        if (billSubjectAmount > fdAmount) {
-                            /* 4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额 */
-                            this.initChargeBean(amcChargeBean, data, (billSubjectAmount),
-                                    Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateFdBean(fdAmount, amcChargeBean,
-                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth,
-                                    billSubjectList);
-                        } else if (billSubjectAmount <= fdAmount) {
-                            /* 4.3.2.4 如果参考科目金额小于或等于封顶金额，则计费金额等于计费金额 */
-                            this.initChargeBean(amcChargeBean, data, (0),
-                                    Long.parseLong(newSubject));
-                            amcChargeSV.saveOrUpdateFdBean(fdAmount, amcChargeBean,
-                                    JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth,
-                                    billSubjectList);
-                        }
+                        /* 4.3.2.3 如果参考科目金额大于封顶金额，则计费金额等于峰顶金额 */
+                        this.initChargeBean(amcChargeBean, data, (billSubjectAmount),
+                                Long.parseLong(newSubject));
+                        amcChargeSV.saveOrUpdateFdBean(fdAmount, amcChargeBean,
+                                JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT), billMonth,
+                                billSubjectList);
                     }
                     /* 限时折扣 */
                     if (AmcConstants.ProductInfo.CALC_TYPE_XSZK.equals(calcType)) {
                         /* 4.3.3.1 优惠科目的金额 */
-                        /* 4.3.2.2 获取该产品封顶金额 */
+                        boolean gotoDiscount = false;
+                        String nowTime = new SimpleDateFormat("HHmmss").format(new SimpleDateFormat("yyyyMMddHHmmss").parse(startTime));
                         List<Map<String, String>> zklList = this.queryProductExtList(tenantId,
                                 productId, AmcConstants.ProductInfo.XSZK_ZKL);
-                        long zkl = Long.parseLong(zklList.get(0).get(
+                        double zkl = Double.parseDouble(zklList.get(0).get(
                                 AmcConstants.ProductInfo.EXT_VALUE));
-                        List<Map<String, String>> extListEffectDate = this.queryProductExtList(tenantId,
-                                productId, AmcConstants.ProductInfo.XSZK_EFFECT_DATE);
-                        String effectDate = extListEffectDate.get(0).get(
-                                AmcConstants.ProductInfo.EXT_VALUE);
-                        List<Map<String, String>> extListExpireDate = this.queryProductExtList(tenantId,
-                                productId, AmcConstants.ProductInfo.XSZK_EXPIRE_DATE);
-                        String expireDate = extListExpireDate.get(0).get(
-                                AmcConstants.ProductInfo.EXT_VALUE);
-
                         List<Map<String, String>> extListEffectTime = this.queryProductExtList(tenantId,
-                                productId, AmcConstants.ProductInfo.XSZK_EXPIRE_TIME);
-                        String effectTime = extListEffectTime.get(0).get(
-                                AmcConstants.ProductInfo.EXT_VALUE);
-
+                                productId, AmcConstants.ProductInfo.XSZK_EFFECT_TIME);
                         List<Map<String, String>> extListExpireTime = this.queryProductExtList(tenantId,
                                 productId, AmcConstants.ProductInfo.XSZK_EXPIRE_TIME);
-
-                        String expireTime = extListExpireTime.get(0).get(
-                                AmcConstants.ProductInfo.EXT_VALUE);
-                        
-                        boolean gotyDiscount = false;
-                        String nowTime = new SimpleDateFormat("hhmmss").format(new Date());
-                        String nowDate = new SimpleDateFormat("yyyyMMdd").format(new Date());
-                        if(Long.parseLong(nowDate)>=Long.parseLong(effectDate)&&Long.parseLong(nowDate)<=Long.parseLong(expireDate)
-                                &&Long.parseLong(nowTime)>=Long.parseLong(effectTime)&&Long.parseLong(nowTime)<=Long.parseLong(expireTime)){
-                            gotyDiscount = true;
+                        if(extListEffectTime!=null&&extListEffectTime.size()>0&&extListExpireTime!=null&&extListExpireTime.size()>0){
+                            String effectTime = extListEffectTime.get(0).get(
+                                    AmcConstants.ProductInfo.EXT_VALUE);
+                            effectTime = effectTime.replaceAll(":", "").replaceAll(" ", "");
+                            String expireTime = extListExpireTime.get(0).get(
+                                    AmcConstants.ProductInfo.EXT_VALUE);
+                            expireTime = expireTime.replaceAll(":", "").replaceAll(" ", "");
+                            nowTime = "1"+nowTime;
+                            effectTime = "1"+effectTime;
+                            expireTime = "1"+expireTime;
+                            if(Long.parseLong(nowTime)>=Long.parseLong(effectTime)&&Long.parseLong(nowTime)<=Long.parseLong(expireTime)){
+                                gotoDiscount = true;
+                            }
                         }
-                        if (i == 0) {
+                        
+                        if (hasDeposit) {
+                            if(gotoDiscount){
+                                hasDeposit = true;
+                                for (AmcChargeBean amcChargeBean : chargeListAfter) {
+                                    long totalAmount = (long)(amcChargeBean.getTotalAmount()*zkl)-amcChargeBean.getTotalAmount();
+                                    long balance = (long)(amcChargeBean.getTotalAmount()*zkl)-amcChargeBean.getTotalAmount();
+                                    long discTotalAmount = amcChargeBean.getTotalAmount()- (long)(amcChargeBean.getTotalAmount()*zkl);
+                                    amcChargeBean.setTotalAmount(totalAmount);
+                                    amcChargeBean.setBalance(balance);
+                                    amcChargeBean.setDiscTotalAmount(discTotalAmount);                                
+                                    amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,
+                                        JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),
+                                        billMonth);
+                                }
+                            }
+                        }else{
+                            hasDeposit = true;
                             for (AmcChargeBean amcChargeBean : chargeListAfter) {
-                                if(gotyDiscount){
-                                    amcChargeBean.setTotalAmount(amcChargeBean.getTotalAmount()*zkl);
-                                    amcChargeBean.setBalance(amcChargeBean.getBalance()*zkl);
-                                    amcChargeBean.setDiscTotalAmount(amcChargeBean.getTotalAmount()
-                                            - amcChargeBean.getTotalAmount()*zkl);
+                                if(gotoDiscount){
+                                    long totalAmount = (long)(amcChargeBean.getTotalAmount()*zkl);
+                                    long balance = (long)(amcChargeBean.getBalance()*zkl);
+                                    long discTotalAmount =  amcChargeBean.getTotalAmount()
+                                            - (long)(amcChargeBean.getTotalAmount()*zkl);
+                                    amcChargeBean.setTotalAmount(totalAmount);
+                                    amcChargeBean.setBalance(balance);
+                                    
+                                    amcChargeBean.setDiscTotalAmount(discTotalAmount);
                                 }
                                 amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,
                                         JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),
@@ -328,6 +335,14 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
                             }
                         }
                     }
+                }
+            }
+            /*如果没有优惠产品，则直接累账*/
+            if(!hasDeposit){
+                for (AmcChargeBean amcChargeBean : chargeListAfter) {                         
+                    amcChargeSV.saveOrUpdateAmcChargeBean(amcChargeBean,
+                        JdbcProxy.getConnection(BaseConstants.JDBC_DEFAULT),
+                        billMonth);
                 }
             }
             amcChargeSV.rebalceOwnInfo(tenantId, acctId);
@@ -381,9 +396,10 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
      * @param data
      * @return
      * @author LiangMeng
+     * @throws ParseException 
      */
-    private List<AmcProductInfoBean> queryProductList(String tenantId, String subsId)
-            throws BusinessException {
+    private List<AmcProductInfoBean> queryProductList(String tenantId, String subsId,String startTime)
+            throws BusinessException, ParseException {
         Map<String, String> params = new TreeMap<String, String>();
         params.put(AmcConstants.FmtFeildName.TENANT_ID, tenantId);
         params.put(AmcConstants.FmtFeildName.SUBS_ID, subsId);
@@ -417,9 +433,22 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             bean.setProductName(map.get("product_name"));
             bean.setStatus(map.get("status"));
             bean.setTenantId(map.get("tenant_id"));
-
+            
             if (AmcConstants.ProductInfo.Status.EFFECTIVE.equals(bean.getStatus())) {
-                sortList.add(bean);
+
+                //String nowDate = new SimpleDateFormat("yyyyMMdd").format(new SimpleDateFormat("yyyyMMddhhmmss").parse(startTime));
+                String effectDate = bean.getEffectDate();
+                String expireDate = bean.getExpireDate();
+                effectDate = effectDate.replaceAll(":", "").replaceAll(" ", "").replaceAll("-", "");
+                expireDate = expireDate.replaceAll(":", "").replaceAll(" ", "").replaceAll("-", "");
+                
+                String effectDateUser = userMap.get("active_time");
+                String expireDateUser = userMap.get("inactive_time");
+                effectDateUser = effectDateUser.replaceAll(":", "").replaceAll(" ", "").replaceAll("-", "");
+                expireDateUser = expireDateUser.replaceAll(":", "").replaceAll(" ", "").replaceAll("-", "");
+                if(Long.parseLong(startTime)>=Long.parseLong(effectDate)&&Long.parseLong(startTime)<=Long.parseLong(expireDate)&&Long.parseLong(startTime)>=Long.parseLong(effectDateUser)&&Long.parseLong(startTime)<=Long.parseLong(expireDateUser)){
+                    sortList.add(bean);
+                }
             }
         }
         /* 排序 */
@@ -510,31 +539,6 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
         list.add(bean1);
         list.add(bean2);
         list.add(bean3);
-        // if(bean1.getSubjectId()!=bean2.getSubjectId()&&bean1.getSubjectId()!=bean3.getSubjectId()&&bean2.getSubjectId()!=bean3.getSubjectId()){
-        // /*3个都属于不通科目*/
-        // list.add(bean1);
-        // list.add(bean2);
-        // list.add(bean3);
-        // }else
-        // if(bean1.getSubjectId()==bean2.getSubjectId()&&bean1.getSubjectId()==bean3.getSubjectId()&&bean2.getSubjectId()==bean3.getSubjectId()){
-        // /*3个都属于同个科目*/
-        // bean1.setTotalAmount(bean1.getTotalAmount()+bean2.getTotalAmount()+bean3.getTotalAmount());
-        // list.add(bean1);
-        // }else
-        // if(bean1.getSubjectId()==bean2.getSubjectId()&&bean1.getSubjectId()!=bean3.getSubjectId()){
-        // /*1==2!=3*/
-        // bean1.setTotalAmount(bean1.getTotalAmount()+bean2.getTotalAmount());
-        // list.add(bean1);
-        // list.add(bean3);
-        // }else
-        // if(bean1.getSubjectId()==bean2.getSubjectId()&&bean1.getSubjectId()!=bean3.getSubjectId()){
-        // /*1==3!=2*/
-        // bean1.setTotalAmount(bean1.getTotalAmount()+bean2.getTotalAmount()+bean3.getTotalAmount());
-        // }else
-        // if(bean1.getSubjectId()==bean2.getSubjectId()&&bean1.getSubjectId()!=bean3.getSubjectId()){
-        // /*1!=2==3*/
-        // bean1.setTotalAmount(bean1.getTotalAmount()+bean2.getTotalAmount()+bean3.getTotalAmount());
-        // }
 
         return list;
     }
