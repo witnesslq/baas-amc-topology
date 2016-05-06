@@ -413,6 +413,11 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
 
         for (Map<String, String> userMap : results) {
             String productId = userMap.get(AmcConstants.ProductInfo.PRODUCT_ID);
+            String product_type = userMap.get("product_type");
+            if(!"bill".equals(product_type)){//只处理账务产品
+                LOG.error("获取产品订购类型失败");
+                continue;
+            }
             params = new TreeMap<String, String>();
             params.put(AmcConstants.FmtFeildName.TENANT_ID, tenantId);
             params.put(AmcConstants.ProductInfo.PRODUCT_ID, productId);
