@@ -15,7 +15,6 @@ import backtype.storm.tuple.Fields;
 import backtype.storm.tuple.Tuple;
 
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
-import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.storm.duplicate.DuplicateCheckingFromHBase;
 import com.ai.baas.storm.failbill.FailBillHandler;
 import com.ai.baas.storm.jdbc.JdbcProxy;

@@ -1,9 +1,7 @@
 package com.ai.baas.amc.test;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -18,12 +16,7 @@ import com.ai.baas.dshm.client.impl.DshmClient;
 import com.ai.baas.dshm.client.interfaces.IDshmClient;
 import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.util.BaseConstants;
-import com.ai.opt.sdk.datasource.OptHikariDataSource;
-import com.ai.opt.sdk.sequence.datasource.SeqDataSourceLoader;
-import com.ai.opt.sdk.sequence.datasource.SeqDataSourceLoaderFactory;
 import com.ai.paas.ipaas.mcs.interfaces.ICacheClient;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 public class DAOTest {
     public static void chargeDaoTest(){
@@ -74,8 +67,8 @@ public class DAOTest {
             client=new DshmClient();
         }
         Properties p=new Properties();
-        p.setProperty(AmcConstants.CacheConfig.CCS_APPNAME, "aiopt-baas-dshm");
-        p.setProperty(AmcConstants.CacheConfig.CCS_ZK_ADDRESS, "10.1.130.84:39181");
+//        p.setProperty(AmcConstants.CacheConfig.CCS_APPNAME, "aiopt-baas-dshm");
+//        p.setProperty(AmcConstants.CacheConfig.CCS_ZK_ADDRESS, "10.1.130.84:39181");
         if(cacheClient==null){
             cacheClient =  CacheFactoryUtil.getCacheClient(p,CacheBLMapper.CACHE_BL_CAL_PARAM);
         }

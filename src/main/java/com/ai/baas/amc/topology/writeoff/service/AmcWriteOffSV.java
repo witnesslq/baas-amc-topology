@@ -27,8 +27,8 @@ import com.ai.baas.amc.topology.writeoff.bean.AmcSettleLogBean;
 import com.ai.baas.dshm.client.interfaces.IDshmClient;
 import com.ai.baas.storm.exception.BusinessException;
 import com.ai.baas.storm.jdbc.JdbcTemplate;
+import com.ai.baas.storm.sequence.util.SeqUtil;
 import com.ai.opt.base.exception.SystemException;
-import com.ai.opt.sdk.sequence.util.SeqUtil;
 import com.ai.paas.ipaas.mcs.interfaces.ICacheClient;
 
 /**

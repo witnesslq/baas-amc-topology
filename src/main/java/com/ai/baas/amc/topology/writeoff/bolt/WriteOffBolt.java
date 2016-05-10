@@ -63,8 +63,14 @@ public class WriteOffBolt extends BaseBasicBolt {
             client=new DshmClient();
         }
         Properties p=new Properties();
-        p.setProperty(AmcConstants.CacheConfig.CCS_APPNAME, (String)stormConf.get(AmcConstants.CacheConfig.CCS_APPNAME));
-        p.setProperty(AmcConstants.CacheConfig.CCS_ZK_ADDRESS, (String)stormConf.get(AmcConstants.CacheConfig.CCS_ZK_ADDRESS));
+        p.setProperty(AmcConstants.CacheConfig.CCS_AUTH_URL,
+                (String) stormConf.get(AmcConstants.CacheConfig.CCS_AUTH_URL));
+        p.setProperty(AmcConstants.CacheConfig.CCS_AUTH_PID,
+                (String) stormConf.get(AmcConstants.CacheConfig.CCS_AUTH_PID));
+        p.setProperty(AmcConstants.CacheConfig.CCS_SERVICE_ID,
+                (String) stormConf.get(AmcConstants.CacheConfig.CCS_SERVICE_ID));
+        p.setProperty(AmcConstants.CacheConfig.CCS_SERVICE_PASSWORD,
+                (String) stormConf.get(AmcConstants.CacheConfig.CCS_SERVICE_PASSWORD));
         if(cacheClient==null){
             cacheClient =  CacheFactoryUtil.getCacheClient(p,CacheBLMapper.CACHE_BL_CAL_PARAM);
         }

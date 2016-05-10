@@ -25,7 +25,7 @@ import backtype.storm.tuple.Tuple;
 import com.ai.baas.amc.topology.core.message.AMCMessageParser;
 import com.ai.baas.amc.topology.core.util.AmcConstants;
 import com.ai.baas.amc.topology.core.util.DSUtil;
-import com.ai.baas.amc.topology.core.util.KafkaProxy;
+import com.ai.baas.amc.topology.core.util.MDSProxy;
 import com.ai.baas.amc.topology.preferential.bean.AmcChargeBean;
 import com.ai.baas.amc.topology.preferential.bean.AmcProductInfoBean;
 import com.ai.baas.amc.topology.preferential.service.AmcPreferentialSV;
@@ -38,8 +38,9 @@ import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.message.MappingRule;
 import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.base.exception.BusinessException;
-import com.ai.opt.sdk.sequence.util.SeqUtil;
+import com.ai.opt.sdk.components.sequence.util.SeqUtil;
 import com.ai.paas.ipaas.mcs.interfaces.ICacheClient;
+import com.ai.paas.ipaas.mds.IMessageSender;
 
 /**
  * 账务优惠bolt Date: 2016年3月23日 <br>
@@ -60,7 +61,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
 
     private IDshmClient client = null;
 
-    private KafkaProxy kafkaProxy = null;
+    private IMessageSender messageSender = null;
 
     /* 初始化dao */
     private AmcPreferentialSV amcChargeSV = new AmcPreferentialSV();
@@ -78,15 +79,23 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             client = new DshmClient();
         }
         Properties p = new Properties();
-        p.setProperty(AmcConstants.CacheConfig.CCS_APPNAME,
-                (String) stormConf.get(AmcConstants.CacheConfig.CCS_APPNAME));
-        p.setProperty(AmcConstants.CacheConfig.CCS_ZK_ADDRESS,
-                (String) stormConf.get(AmcConstants.CacheConfig.CCS_ZK_ADDRESS));
+        p.setProperty(AmcConstants.CacheConfig.CCS_AUTH_URL,
+                (String) stormConf.get(AmcConstants.CacheConfig.CCS_AUTH_URL));
+        p.setProperty(AmcConstants.CacheConfig.CCS_AUTH_PID,
+                (String) stormConf.get(AmcConstants.CacheConfig.CCS_AUTH_PID));
+        p.setProperty(AmcConstants.CacheConfig.CCS_SERVICE_ID,
+                (String) stormConf.get(AmcConstants.CacheConfig.CCS_SERVICE_ID));
+        p.setProperty(AmcConstants.CacheConfig.CCS_SERVICE_PASSWORD,
+                (String) stormConf.get(AmcConstants.CacheConfig.CCS_SERVICE_PASSWORD));
         if (cacheClient == null) {
             cacheClient = CacheFactoryUtil.getCacheClient(p, CacheBLMapper.CACHE_BL_CAL_PARAM);
         }
         /* 4.初始化kafka */
-        kafkaProxy = KafkaProxy.getInstance(stormConf);
+        messageSender = MDSProxy.getMessageSender((String) stormConf.get(AmcConstants.KafkaConfig.MDS_AUTH_URL),
+                (String) stormConf.get(AmcConstants.KafkaConfig.MDS_AUTH_PID),
+                (String) stormConf.get(AmcConstants.KafkaConfig.MDS_SERVICE_PASSWORD),
+                (String) stormConf.get(AmcConstants.KafkaConfig.MDS_SERVICE_ID),  
+                (String) stormConf.get(AmcConstants.KafkaConfig.MDS_TOPIC));
 
         /* 5.初始化序列数据源 */
         DSUtil.initSeqDS(stormConf);
@@ -350,7 +359,7 @@ public class AccountPreferentialBolt extends BaseBasicBolt {
             datas.add(inputData);
             collector.emit(datas);
             /* 6.发送信控消息 */
-            // kafkaProxy.sendMessage(inputData);
+            messageSender.send(inputData,Long.parseLong(acctId)%2);
 
         } catch (BusinessException e) {
             /* 处理 异常 */

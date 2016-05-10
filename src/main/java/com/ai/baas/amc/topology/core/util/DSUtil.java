@@ -3,8 +3,8 @@ package com.ai.baas.amc.topology.core.util;
 import java.util.Map;
 
 import com.ai.baas.storm.util.BaseConstants;
-import com.ai.opt.sdk.sequence.datasource.SeqDataSourceLoader;
-import com.ai.opt.sdk.sequence.datasource.SeqDataSourceLoaderFactory;
+import com.ai.opt.sdk.components.sequence.datasource.SeqDataSourceLoader;
+import com.ai.opt.sdk.components.sequence.datasource.SeqDataSourceLoaderFactory;
 import com.alibaba.fastjson.JSONObject;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;

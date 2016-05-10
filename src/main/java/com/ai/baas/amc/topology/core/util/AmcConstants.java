@@ -189,14 +189,17 @@ public class AmcConstants {
 	 * @author LiangMeng
 	 */
 	public static class KafkaConfig{
-	    //broker list
-	    public static final String BROKER_LIST = "metadata.broker.list";
-	    //broker list
-        public static final String SERIALIZER_CLASS = "serializer.class";
-        //broker list
-        public static final String REQUIRED_ACKS = "request.required.acks";
-        //broker list
-        public static final String KAFKA_TOPIC_XK = "kafka.topic.xk";
+	    public static final String MDS_AUTH_URL = "paas.auth.url";
+        
+        public static final String MDS_AUTH_PID = "paas.auth.pid";
+       
+        public static final String MDS_SERVICE_ID = "paas.mds.serviceid";
+        
+        public static final String MDS_SERVICE_PASSWORD = "paas.mds.servicepassword";
+
+        public static final String MDS_TOPIC = "paas.mds.topic";
+        
+        
 	}
 	/**
 	 * 缓存表配置
@@ -206,10 +209,18 @@ public class AmcConstants {
 	 * @author LiangMeng
 	 */
 	public static class CacheConfig{
-	    
-	    public static final String CCS_APPNAME = "ccs.appname";
-	    
-	    public static final String CCS_ZK_ADDRESS = "ccs.zk_address";
+	    public static final String CCS_AUTH_URL = "paas.auth.url";
+        
+        public static final String CCS_AUTH_PID = "paas.auth.pid";
+	   
+        public static final String CCS_SERVICE_ID = "paas.ccs.serviceid";
+        
+        public static final String CCS_SERVICE_PASSWORD = "paas.ccs.servicepassword";
+        
+        
+//        public static final String CCS_APPNAME = "ccs.appname";
+//	    
+//	    public static final String CCS_ZK_ADDRESS = "ccs.zk_address";
         //
         public static final String AMC_DR_BILL_SUBJECT_MAP = "amc_dr_bill_subject_map";
         //

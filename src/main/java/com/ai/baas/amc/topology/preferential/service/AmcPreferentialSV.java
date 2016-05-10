@@ -20,7 +20,7 @@ import com.ai.baas.storm.jdbc.JdbcProxy;
 import com.ai.baas.storm.jdbc.JdbcTemplate;
 import com.ai.baas.storm.util.BaseConstants;
 import com.ai.opt.base.exception.SystemException;
-import com.ai.opt.sdk.sequence.util.SeqUtil;
+import com.ai.opt.sdk.components.sequence.util.SeqUtil;
 
 /**
  * 账务优惠SV

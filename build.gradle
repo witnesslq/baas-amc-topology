@@ -7,9 +7,6 @@ sourceCompatibility = 1.7
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 ext {
     optBaseVersion = "1.0-SNAPSHOT"
-    optSDKVersion = "1.0.2-SNAPSHOT"
-    baasDshmVersion = "1.0.7-SNAPSHOT"
-    
 }
 
 repositories {
@@ -37,8 +34,8 @@ dependencies{
     //内部依赖
     compile 'com.ai.baas.storm:baas-storm:0.1.2-SNAPSHOT'
     compile "com.ai.opt:opt-base:${optBaseVersion}"
-    compile 'com.ai.baas:baas-dshm-sdk:1.0.8-SNAPSHOT'
-    compile ('com.ai.opt.sdk:opt-sdk:1.0.2-SNAPSHOT'){
+    compile 'com.ai.baas:baas-dshm-sdk:2.0-SNAPSHOT'
+    compile ('com.ai.opt.sdk:opt-sdk:2.0-SNAPSHOT'){
         exclude group: 'org.springframework', module: 'spring-context'
         exclude group: 'com.alibaba', module: 'dubbox'
         exclude group: 'org.postgresql', module: 'postgresql'
@@ -55,6 +52,8 @@ dependencies{
     provided 'org.apache.logging.log4j:log4j-api:2.4'
     provided 'org.apache.logging.log4j:log4j-jcl:2.3'
     provided 'org.apache.logging.log4j:log4j-core:2.3'
+    provided 'org.apache.hbase:hbase-common:1.1.2'
+    provided 'org.apache.hadoop:hadoop-common:2.7.1'
     
 }
 jar {
