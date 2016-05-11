@@ -25,7 +25,7 @@ public class ProducerProxy {
 	
 	private static void init(){
 		Properties props = new Properties();
-		props.put("metadata.broker.list", "10.1.130.84:39091");
+		props.put("metadata.broker.list", "10.1.245.5:39091,10.1.245.6:39091,10.1.245.7:39091");
 		//props.put("metadata.broker.list", "10.1.241.34:39091");
         props.put("serializer.class", "kafka.serializer.StringEncoder"); 
         props.put("request.required.acks", "1");

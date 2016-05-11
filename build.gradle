@@ -37,7 +37,6 @@ dependencies{
     compile 'com.ai.baas:baas-dshm-sdk:2.0-SNAPSHOT'
     compile ('com.ai.opt.sdk:opt-sdk:2.0-SNAPSHOT'){
         exclude group: 'org.springframework', module: 'spring-context'
-        exclude group: 'com.alibaba', module: 'dubbox'
         exclude group: 'org.postgresql', module: 'postgresql'
         exclude group: 'org.apache.commons', module: 'commons-email'
         exclude group: 'org.hibernate', module: 'hibernate-validator'
